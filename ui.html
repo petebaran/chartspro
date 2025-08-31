@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      color: #1a1a1a;
+      line-height: 1.4;
+    }
+
+    .container {
+      max-width: 100%;
+      background: rgb(226, 230, 232);
+      border-radius: 0px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    .content {
+      padding: 16px;
+    }
+
+    .section {
+      margin-bottom: 16px;
+      padding: 16px;
+      background: #ffffff;
+      border-radius: 6px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #4a5568;
+      margin: 0 0
+ 12px 0;
+      text-transform: none;
+      letter-spacing: -0.1px;
+    }
+
+    #chart {
+      height: 280px;
+      margin-bottom: 20px; /* Increased margin */
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+      background: white;
+      position: relative;
+    }
+
+    #chart canvas {
+      width: 100%;
+      height: 100%;
+      cursor: crosshair;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: #4a5568;
+      margin-bottom: 4px;
+    }
+
+    select, input, button {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      font-size: 13px;
+      transition: all 0.2s ease;
+    }
+
+    select:focus, input:focus {
+      outline: none;
+      border-color: #C78D3A;
+      box-shadow: 0 0 0 3px rgba(199, 141, 58, 0.1);
+    }
+
+    .timeframes {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(45px, 1fr));
+      gap: 8px; /* Increased gap */
+      margin-bottom: 20px; /* Increased margin */
+    }
+
+    .timeframes button {
+      padding: 8px 6px;
+      font-size: 11px;
+      font-weight: 500;
+      background: white;
+      border: 1px solid #e2e8f0;
+      color: #4a5568;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .timeframes button:hover {
+      background: #f7fafc;
+      border-color: #cbd5e0;
+    }
+
+    .timeframes button.active {
+      background: #C78D3A;
+      color: white;
+      border-color: #C78D3A;
+      box-shadow: 0 1px 3px rgba(199, 141, 58, 0.3);
+    }
+
+    .checkbox-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .checkbox-item:hover {
+      background: #f7fafc;
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      margin: 0 8px 0 0;
+      width: auto;
+    }
+
+    .checkbox-item label {
+      margin: 0;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .size-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px; /* Increased gap */
+      margin-bottom: 16px;
+    }
+
+    .color-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px; /* Increased gap */
+      margin-bottom: 16px;
+    }
+
+    .color-input-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .color-input-group input[type="color"] {
+      width: 40px;
+      height: 32px;
+      padding: 0;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .color-input-group label {
+      margin: 0;
+      font-size: 12px;
+      flex: 1;
+    }
+
+    .generate-btn {
+      background: #C78D3A;
+      color: white;
+      border: none;
+      padding: 14px 20px; /* Bigger button */
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-radius: 6px;
+    }
+
+    .generate-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(199, 141, 58, 0.3);
+      background: #B8802F;
+    }
+
+    .generate-btn:active {
+      transform: translateY(0);
+    }
+
+    .search-box {
+      position: relative;
+      margin-bottom: 8px;
+    }
+
+    .search-box input {
+      padding-left: 32px;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #a0aec0;
+      font-size: 14px;
+    }
+
+    .symbol-list {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      background: white;
+    }
+
+    .symbol-option {
+      padding: 8px 12px;
+      cursor: pointer;
+      border-bottom: 1px solid #f7fafc;
+      font-size: 12px;
+      transition: background-color 0.1s ease;
+    }
+
+    .symbol-option:hover {
+      background: #f7fafc;
+    }
+
+    .symbol-option.selected {
+      background: #C78D3A;
+      color: white;
+    }
+
+    .symbol-option:last-child {
+      border-bottom: none;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #718096;
+      font-size: 13px;
+    }
+
+    .error {
+      background: #fed7d7;
+      color: #c53030;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-bottom: 16px;
+    }
+
+    .custom-range-section {
+      background: #fff8dc;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="content">
+      <div class="section">
+        <h3 class="section-title">Preview</h3>
+        <div id="chart"></div>
+        <div class="timeframes">
+          <button data-days="1">1D</button>
+          <button data-days="5">5D</button>
+          <button data-days="30">1M</button>
+          <button data-days="90">3M</button>
+          <button data-days="180">6M</button>
+          <button data-days="ytd">YTD</button>
+          <button data-days="365">1Y</button>
+          <button data-days="1825">5Y</button>
+          <button data-days="max">All</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3 class="section-title">Data Selection</h3>
+        <div class="form-group">
+          <label for="interval">Interval:</label>
+          <select id="interval">
+            <option value="5m">5 minutes</option>
+            <option value="15m">15 minutes</option>
+            <option value="30m">30 minutes</option>
+            <option value="60m">1 hour</option>
+            <option value="1d">1 day</option>
+            <option value="1wk">1 week</option>
+            <option value="1mo">1 month</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="category">Category:</label>
+          <select id="category">
+            <option value="stocks">US Stocks</option>
+            <option value="crypto">Cryptocurrency</option>
+            <option value="forex">Foreign Exchange</option>
+            <option value="indices">World Indices</option>
+            <option value="commodities">Commodities</option>
+            <option value="etfs">ETFs</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Search Instrument:</label>
+          <div class="search-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="symbolSearch" placeholder="Search stocks, crypto, commodities...">
+          </div>
+          <div class="symbol-list" id="symbolList"></div>
+        </div>
+      </div>
+
+      <div class="section custom-range-section">
+        <h3 class="section-title">Custom Date Range</h3>
+        <div class="form-group">
+          <div class="checkbox-item">
+            <input type="checkbox" id="useCustomRange">
+            <label for="useCustomRange">Enable Custom Date Range</label>
+          </div>
+        </div>
+
+        <div id="dateRangeInputs" style="display: none;">
+          <div class="size-inputs">
+            <div class="form-group">
+              <label for="startDate">Start Date:</label>
+              <input type="date" id="startDate">
+            </div>
+            <div class="form-group">
+              <label for="endDate">End Date:</label>
+              <input type="date" id="endDate">
+            </div>
+          </div>
+          <button id="applyDateRange" class="generate-btn" style="font-size: 12px; padding: 8px 12px; margin-top: 8px;">Apply Date Range</button>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3 class="section-title">Chart Appearance</h3>
+        <div class="checkbox-grid">
+          <div class="checkbox-item">
+            <input type="checkbox" id="showPriceGrid" checked>
+            <label for="showPriceGrid">Price Grid</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="showDateGrid" checked>
+            <label for="showDateGrid">Date Grid</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="showVolume">
+            <label for="showVolume">Volume Bars</label>
+          </div>
+          <div class="checkbox-item">
+            <input type="checkbox" id="transparentBackground">
+            <label for="transparentBackground">Transparent BG</label>
+          </div>
+        </div>
+
+        <div class="color-inputs">
+          <div class="color-input-group">
+            <input type="color" id="bullColor" value="#00b386">
+            <label for="bullColor">Bull Color</label>
+          </div>
+          <div class="color-input-group">
+            <input type="color" id="bearColor" value="#ff4d4d">
+            <label for="bearColor">Bear Color</label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="strokeWeight">Stroke Weight (px):</label>
+          <input type="number" id="strokeWeight" value="1" min="0.5" max="5" step="0.5">
+        </div>
+      </div>
+
+      <div class="section">
+        <h3 class="section-title">Chart Size</h3>
+        <div class="size-inputs">
+          <div class="form-group">
+            <label for="chartWidth">Width (px):</label>
+            <input type="number" id="chartWidth" value="600" min="300" max="2000" step="50">
+          </div>
+          <div class="form-group">
+            <label for="chartHeight">Height (px):</label>
+            <input type="number" id="chartHeight" value="400" min="300" max="1200" step="50">
+          </div>
+        </div>
+      </div>
+
+      <button id="generate" class="generate-btn">Generate Vector Chart</button>
+    </div>
+  </div>
+
+  <script>
+    // Comprehensive instrument database
+    const instruments = {
+      stocks: [
+        { symbol: "AAPL", label: "Apple Inc. (AAPL)" },
+        { symbol: "MSFT", label: "Microsoft Corporation (MSFT)" },
+        { symbol: "GOOGL", label: "Alphabet Inc. (GOOGL)" },
+        { symbol: "AMZN", label: "Amazon.com Inc. (AMZN)" },
+        { symbol: "NVDA", label: "NVIDIA Corporation (NVDA)" },
+        { symbol: "META", label: "Meta Platforms Inc. (META)" },
+        { symbol: "TSLA", label: "Tesla Inc. (TSLA)" },
+        { symbol: "BRK-B", label: "Berkshire Hathaway Inc. (BRK-B)" },
+        { symbol: "UNH", label: "UnitedHealth Group Inc. (UNH)" },
+        { symbol: "XOM", label: "Exxon Mobil Corporation (XOM)" },
+        { symbol: "JNJ", label: "Johnson & Johnson (JNJ)" },
+        { symbol: "JPM", label: "JPMorgan Chase & Co. (JPM)" },
+        { symbol: "V", label: "Visa Inc. (V)" },
+        { symbol: "PG", label: "Procter & Gamble Co. (PG)" },
+        { symbol: "MA", label: "Mastercard Inc. (MA)" },
+        { symbol: "HD", label: "Home Depot Inc. (HD)" },
+        { symbol: "CVX", label: "Chevron Corporation (CVX)" },
+        { symbol: "ABBV", label: "AbbVie Inc. (ABBV)" },
+        { symbol: "PFE", label: "Pfizer Inc. (PFE)" },
+        { symbol: "KO", label: "Coca-Cola Company (KO)" },
+        { symbol: "BAC", label: "Bank of America Corp. (BAC)" },
+        { symbol: "AVGO", label: "Broadcom Inc. (AVGO)" },
+        { symbol: "WMT", label: "Walmart Inc. (WMT)" },
+        { symbol: "LLY", label: "Eli Lilly and Company (LLY)" },
+        { symbol: "CRM", label: "Salesforce Inc. (CRM)" },
+        { symbol: "TMO", label: "Thermo Fisher Scientific (TMO)" },
+        { symbol: "COST", label: "Costco Wholesale Corp. (COST)" },
+        { symbol: "NFLX", label: "Netflix Inc. (NFLX)" },
+        { symbol: "ADBE", label: "Adobe Inc. (ADBE)" },
+        { symbol: "ORCL", label: "Oracle Corporation (ORCL)" },
+        { symbol: "CSCO", label: "Cisco Systems Inc. (CSCO)" },
+        { symbol: "AMD", label: "Advanced Micro Devices (AMD)" },
+        { symbol: "INTC", label: "Intel Corporation (INTC)" },
+        { symbol: "QCOM", label: "QUALCOMM Inc. (QCOM)" },
+        { symbol: "AMAT", label: "Applied Materials Inc. (AMAT)" },
+        { symbol: "MU", label: "Micron Technology Inc. (MU)" },
+        { symbol: "PANW", label: "Palo Alto Networks (PANW)" },
+        { symbol: "CRWD", label: "CrowdStrike Holdings (CRWD)" },
+        { symbol: "SNOW", label: "Snowflake Inc. (SNOW)" },
+        { symbol: "NET", label: "Cloudflare Inc. (NET)" },
+        { symbol: "ZS", label: "Zscaler Inc. (ZS)" },
+        { symbol: "DDOG", label: "Datadog Inc. (DDOG)" },
+        { symbol: "OKTA", label: "Okta Inc. (OKTA)" },
+        { symbol: "PLTR", label: "Palantir Technologies (PLTR)" },
+        { symbol: "COIN", label: "Coinbase Global Inc. (COIN)" },
+        { symbol: "RBLX", label: "Roblox Corporation (RBLX)" },
+        { symbol: "SHOP", label: "Shopify Inc. (SHOP)" },
+        { symbol: "SQ", label: "Block Inc. (SQ)" },
+        { symbol: "PYPL", label: "PayPal Holdings Inc. (PYPL)" },
+        { symbol: "SPOT", label: "Spotify Technology (SPOT)" },
+        { symbol: "UBER", label: "Uber Technologies (UBER)" },
+        // European Stocks
+        { symbol: "ASML", label: "ASML Holding - Netherlands (ASML)" },
+        { symbol: "SAP", label: "SAP SE - Germany (SAP)" },
+        { symbol: "NVO", label: "Novo Nordisk - Denmark (NVO)" },
+        { symbol: "UL", label: "Unilever - UK/Netherlands (UL)" },
+        { symbol: "AZN", label: "AstraZeneca - UK (AZN)" },
+        { symbol: "BP", label: "BP plc - UK (BP)" },
+        { symbol: "GSK", label: "GlaxoSmithKline - UK (GSK)" },
+        // Asian Stocks
+        { symbol: "TSM", label: "Taiwan Semiconductor (TSM)" },
+        { symbol: "BABA", label: "Alibaba Group - China (BABA)" },
+        { symbol: "TM", label: "Toyota Motor - Japan (TM)" },
+        { symbol: "SNY", label: "Sony Group - Japan (SNY)" },
+        { symbol: "HDB", label: "HDFC Bank - India (HDB)" },
+        { symbol: "IBN", label: "ICICI Bank - India (IBN)" },
+        { symbol: "INFY", label: "Infosys Limited - India (INFY)" },
+        { symbol: "JD", label: "JD.com Inc. - China (JD)" },
+        { symbol: "NIO", label: "NIO Inc. - China (NIO)" }
+      ].sort((a, b) => a.label.localeCompare(b.label)),
+      
+      crypto: [
+        { symbol: "BTC-USD", label: "Bitcoin (BTC-USD)" },
+        { symbol: "ETH-USD", label: "Ethereum (ETH-USD)" },
+        { symbol: "BNB-USD", label: "Binance Coin (BNB-USD)" },
+        { symbol: "XRP-USD", label: "Ripple (XRP-USD)" },
+        { symbol: "ADA-USD", label: "Cardano (ADA-USD)" },
+        { symbol: "SOL-USD", label: "Solana (SOL-USD)" },
+        { symbol: "DOGE-USD", label: "Dogecoin (DOGE-USD)" },
+        { symbol: "DOT-USD", label: "Polkadot (DOT-USD)" },
+        { symbol: "AVAX-USD", label: "Avalanche (AVAX-USD)" },
+        { symbol: "SHIB-USD", label: "Shiba Inu (SHIB-USD)" },
+        { symbol: "MATIC-USD", label: "Polygon (MATIC-USD)" },
+        { symbol: "LTC-USD", label: "Litecoin (LTC-USD)" },
+        { symbol: "LINK-USD", label: "Chainlink (LINK-USD)" },
+        { symbol: "UNI-USD", label: "Uniswap (UNI-USD)" },
+        { symbol: "ATOM-USD", label: "Cosmos (ATOM-USD)" },
+        { symbol: "VET-USD", label: "VeChain (VET-USD)" },
+        { symbol: "FIL-USD", label: "Filecoin (FIL-USD)" },
+        { symbol: "TRX-USD", label: "TRON (TRX-USD)" },
+        { symbol: "ETC-USD", label: "Ethereum Classic (ETC-USD)" },
+        { symbol: "XLM-USD", label: "Stellar (XLM-USD)" },
+        { symbol: "ALGO-USD", label: "Algorand (ALGO-USD)" },
+        { symbol: "HBAR-USD", label: "Hedera (HBAR-USD)" },
+        { symbol: "ICP-USD", label: "Internet Computer (ICP-USD)" },
+        { symbol: "APE-USD", label: "ApeCoin (APE-USD)" }
+      ].sort((a, b) => a.label.localeCompare(b.label)),
+      
+      etfs: [
+        { symbol: "SPY", label: "SPDR S&P 500 ETF Trust (SPY)" },
+        { symbol: "QQQ", label: "Invesco QQQ Trust (QQQ)" },
+        { symbol: "VTI", label: "Vanguard Total Stock Market (VTI)" },
+        { symbol: "IWM", label: "iShares Russell 2000 ETF (IWM)" },
+        { symbol: "EFA", label: "iShares MSCI EAFE ETF (EFA)" },
+        { symbol: "EEM", label: "iShares MSCI Emerging Markets (EEM)" },
+        { symbol: "VEA", label: "Vanguard FTSE Developed Markets (VEA)" },
+        { symbol: "VWO", label: "Vanguard FTSE Emerging Markets (VWO)" },
+        { symbol: "GLD", label: "SPDR Gold Trust (GLD)" },
+        { symbol: "SLV", label: "iShares Silver Trust (SLV)" },
+        { symbol: "USO", label: "United States Oil Fund (USO)" },
+        { symbol: "TLT", label: "iShares 20+ Year Treasury Bond (TLT)" },
+        { symbol: "HYG", label: "iShares iBoxx High Yield Corporate (HYG)" },
+        { symbol: "LQD", label: "iShares iBoxx Investment Grade (LQD)" },
+        { symbol: "VNQ", label: "Vanguard Real Estate ETF (VNQ)" },
+        { symbol: "XLF", label: "Financial Select Sector SPDR (XLF)" },
+        { symbol: "XLK", label: "Technology Select Sector SPDR (XLK)" },
+        { symbol: "XLE", label: "Energy Select Sector SPDR (XLE)" },
+        { symbol: "XLV", label: "Health Care Select Sector SPDR (XLV)" },
+        { symbol: "XLI", label: "Industrial Select Sector SPDR (XLI)" },
+        { symbol: "XLP", label: "Consumer Staples Select Sector (XLP)" },
+        { symbol: "XLY", label: "Consumer Discretionary Select (XLY)" },
+        { symbol: "XLU", label: "Utilities Select Sector SPDR (XLU)" },
+        { symbol: "XLB", label: "Materials Select Sector SPDR (XLB)" },
+        { symbol: "ARKK", label: "ARK Innovation ETF (ARKK)" },
+        { symbol: "ARKQ", label: "ARK Autonomous Technology (ARKQ)" },
+        { symbol: "ARKG", label: "ARK Genomic Revolution (ARKG)" },
+        { symbol: "ICLN", label: "iShares Global Clean Energy (ICLN)" },
+        { symbol: "JETS", label: "US Global Jets ETF (JETS)" },
+        { symbol: "HACK", label: "ETFMG Prime Cyber Security (HACK)" }
+      ].sort((a, b) => a.label.localeCompare(b.label)),
+      
+      commodities: [
+        { symbol: "GC=F", label: "Gold Futures (GC=F)" },
+        { symbol: "SI=F", label: "Silver Futures (SI=F)" },
+        { symbol: "CL=F", label: "Crude Oil WTI Futures (CL=F)" },
+        { symbol: "BZ=F", label: "Brent Crude Oil Futures (BZ=F)" },
+        { symbol: "NG=F", label: "Natural Gas Futures (NG=F)" },
+        { symbol: "HG=F", label: "Copper Futures (HG=F)" },
+        { symbol: "PL=F", label: "Platinum Futures (PL=F)" },
+        { symbol: "PA=F", label: "Palladium Futures (PA=F)" },
+        { symbol: "ZC=F", label: "Corn Futures (ZC=F)" },
+        { symbol: "ZS=F", label: "Soybean Futures (ZS=F)" },
+        { symbol: "ZW=F", label: "Wheat Futures (ZW=F)" },
+        { symbol: "KC=F", label: "Coffee Futures (KC=F)" },
+        { symbol: "SB=F", label: "Sugar Futures (SB=F)" },
+        { symbol: "CC=F", label: "Cocoa Futures (CC=F)" },
+        { symbol: "CT=F", label: "Cotton Futures (CT=F)" }
+      ].sort((a, b) => a.label.localeCompare(b.label)),
+      
+      indices: [
+        // US Indices  
+        { symbol: "^GSPC", label: "S&P 500 (^GSPC)" },
+        { symbol: "^DJI", label: "Dow Jones 30 (^DJI)" },
+        { symbol: "^IXIC", label: "NASDAQ Composite (^IXIC)" },
+        { symbol: "^NDX", label: "NASDAQ 100 (^NDX)" },
+        { symbol: "^RUT", label: "Russell 2000 (^RUT)" },
+        { symbol: "^VIX", label: "VIX Volatility (^VIX)" },
+        
+        // European Indices
+        { symbol: "^FTSE", label: "FTSE 100 UK (^FTSE)" },
+        { symbol: "^GDAXI", label: "Germany 40 DAX (^GDAXI)" },
+        { symbol: "^FCHI", label: "France 40 CAC (^FCHI)" },
+        { symbol: "^STOXX50E", label: "EURO STOXX 50 (^STOXX50E)" },
+        { symbol: "^AEX", label: "Netherlands AEX (^AEX)" },
+        { symbol: "^IBEX", label: "Spain IBEX 35 (^IBEX)" },
+        { symbol: "^OMX", label: "Sweden OMX 30 (^OMX)" },
+        { symbol: "^SSMI", label: "Switzerland SMI (^SSMI)" },
+        
+        // Asian Pacific Indices
+        { symbol: "^N225", label: "Japan Nikkei 225 (^N225)" },
+        { symbol: "^HSI", label: "Hong Kong Hang Seng (^HSI)" },
+        { symbol: "000001.SS", label: "China Shanghai (000001.SS)" },
+        { symbol: "399001.SZ", label: "China Shenzhen (399001.SZ)" },
+        { symbol: "^KS11", label: "South Korea KOSPI (^KS11)" },
+        { symbol: "^TWII", label: "Taiwan Weighted (^TWII)" },
+        { symbol: "^AXJO", label: "Australia ASX 200 (^AXJO)" },
+        { symbol: "^STI", label: "Singapore STI (^STI)" },
+        { symbol: "^BSESN", label: "India Sensex (^BSESN)" },
+        { symbol: "^NSEI", label: "India Nifty 50 (^NSEI)" },
+        { symbol: "^BVSP", label: "Brazil IBOVESPA (^BVSP)" },
+        { symbol: "^GSPTSE", label: "Canada TSX (^GSPTSE)" }
+      ].sort((a, b) => a.label.localeCompare(b.label)),
+      
+      forex: [
+        { symbol: "EURUSD=X", label: "EUR/USD (EURUSD=X)" },
+        { symbol: "GBPUSD=X", label: "GBP/USD (GBPUSD=X)" },
+        { symbol: "USDJPY=X", label: "USD/JPY (USDJPY=X)" },
+        { symbol: "USDCHF=X", label: "USD/CHF (USDCHF=X)" },
+        { symbol: "AUDUSD=X", label: "AUD/USD (AUDUSD=X)" },
+        { symbol: "USDCAD=X", label: "USD/CAD (USDCAD=X)" },
+        { symbol: "NZDUSD=X", label: "NZD/USD (NZDUSD=X)" },
+        { symbol: "EURGBP=X", label: "EUR/GBP (EURGBP=X)" },
+        { symbol: "EURJPY=X", label: "EUR/JPY (EURJPY=X)" },
+        { symbol: "GBPJPY=X", label: "GBP/JPY (GBPJPY=X)" },
+        { symbol: "EURCHF=X", label: "EUR/CHF (EURCHF=X)" },
+        { symbol: "GBPCHF=X", label: "GBP/CHF (GBPCHF=X)" },
+        { symbol: "AUDCHF=X", label: "AUD/CHF (AUDCHF=X)" },
+        { symbol: "CADJPY=X", label: "CAD/JPY (CADJPY=X)" },
+        { symbol: "CHFJPY=X", label: "CHF/JPY (CHFJPY=X)" }
+      ].sort((a, b) => a.label.localeCompare(b.label))
+    };
+
+    let currentSymbol = "AAPL";
+    let filteredSymbols = [];
+
+    function renderPreview(result) {
+      const timestamps = result.timestamp;
+      const ohlc = result.indicators.quote[0];
+
+      // Filter data and prepare for custom drawing
+      let filteredData = [];
+      const interval = document.getElementById('interval').value;
+      
+      for (let i = 0; i < timestamps.length; i++) {
+        const date = new Date(timestamps[i] * 1000);
+        const dayOfWeek = date.getDay();
+        
+        // For daily+ intervals, skip weekends completely
+        if (interval === '1d' || interval === '1wk' || interval === '1mo') {
+          if (dayOfWeek === 0 || dayOfWeek === 6) continue; // Skip weekends
+        }
+        
+        if (ohlc.open[i] != null && ohlc.high[i] != null && ohlc.low[i] != null && ohlc.close[i] != null) {
+          filteredData.push({
+            date: date,
+            open: ohlc.open[i],
+            high: ohlc.high[i],
+            low: ohlc.low[i],
+            close: ohlc.close[i]
+          });
+        }
+      }
+
+      drawCandlestickChart(filteredData);
+    }
+
+    function drawCandlestickChart(data) {
+      const chartEl = document.getElementById("chart");
+      chartEl.innerHTML = '<canvas id="candleCanvas"></canvas>';
+      
+      const canvas = document.getElementById('candleCanvas');
+      const ctx = canvas.getContext('2d');
+      
+      // Set canvas size to match container
+      const rect = chartEl.getBoundingClientRect();
+      canvas.width = rect.width * window.devicePixelRatio;
+      canvas.height = rect.height * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+      
+      const width = rect.width;
+      const height = rect.height;
+      
+      if (data.length === 0) return;
+      
+      // Find price range
+      let minPrice = Math.min(...data.map(d => d.low));
+      let maxPrice = Math.max(...data.map(d => d.high));
+      const priceRange = maxPrice - minPrice;
+      minPrice -= priceRange * 0.1; // Add 10% padding
+      maxPrice += priceRange * 0.1; // Add 10% padding
+      const adjustedRange = maxPrice - minPrice;
+      
+      // Colors
+      const bullColor = document.getElementById('bullColor').value;
+      const bearColor = document.getElementById('bearColor').value;
+      const gridColor = '#eef2f7'; // Lighter grid for a cleaner look
+      const textColor = '#4a5568';
+      
+      // Get current timeframe to adjust labels
+      const activeBtn = document.querySelector('.timeframes button.active');
+      const days = activeBtn ? activeBtn.dataset.days : "30";
+
+      // Clear canvas
+      ctx.clearRect(0, 0, width, height);
+      
+      // STEP 1: First measure price text widths to determine layout
+      ctx.fillStyle = textColor;
+      ctx.font = '10px -apple-system, sans-serif';
+      
+      const numPriceLabels = 5;
+      let maxPriceTextWidth = 0;
+      
+      // Measure all price texts to find the maximum width
+      for (let i = 0; i <= numPriceLabels; i++) {
+        const price = minPrice + (adjustedRange * (numPriceLabels - i) / numPriceLabels);
+        
+        // Format price with comma separators
+        let formattedPrice;
+        if (price >= 1) {
+          formattedPrice = price.toFixed(2);
+        } else if (price >= 0.01) {
+          formattedPrice = price.toFixed(3);
+        } else {
+          formattedPrice = price.toFixed(6);
+        }
+        
+        // Add comma separators
+        const parts = formattedPrice.split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        const finalPrice = parts.join('.');
+        
+        const textWidth = ctx.measureText(finalPrice).width;
+        maxPriceTextWidth = Math.max(maxPriceTextWidth, textWidth);
+      }
+      
+      // STEP 2: Calculate layout based on measured text width
+      const leftPadding = 16;
+      const gapBetweenChartAndPrices = 24; // 10px gap between chart and price labels
+      const rightPadding = maxPriceTextWidth + gapBetweenChartAndPrices + 8; // gap + margin
+      const topPadding = 24;
+      const bottomPadding = 30;
+      
+      const chartWidth = width - leftPadding - rightPadding;
+      const chartHeight = height - topPadding - bottomPadding;
+      const priceTextX = width - maxPriceTextWidth - 8; // Position text with 8px right margin
+      
+      // STEP 3: Draw grid lines if enabled
+      if (document.getElementById('showPriceGrid').checked) {
+        ctx.strokeStyle = gridColor;
+        ctx.lineWidth = 1;
+        ctx.setLineDash([2, 4]);
+        for (let i = 0; i <= numPriceLabels; i++) {
+          const y = topPadding + (chartHeight * i / numPriceLabels);
+          ctx.beginPath();
+          ctx.moveTo(leftPadding, y);
+          ctx.lineTo(leftPadding + chartWidth, y);
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+      }
+      
+      if (document.getElementById('showDateGrid').checked) {
+        ctx.strokeStyle = gridColor;
+        ctx.lineWidth = 1;
+        ctx.setLineDash([2, 4]);
+        const dateStep = Math.max(1, Math.floor(data.length / 5));
+        for (let i = dateStep; i < data.length - 1; i += dateStep) {
+          const x = leftPadding + (i / Math.max(1, data.length - 1)) * chartWidth;
+          ctx.beginPath();
+          ctx.moveTo(x, topPadding);
+          ctx.lineTo(x, height - bottomPadding);
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+      }
+      
+      // STEP 4: Draw price labels using the calculated position
+      ctx.fillStyle = textColor;
+      ctx.font = '10px -apple-system, sans-serif';
+      ctx.textAlign = 'left';
+      
+      for (let i = 0; i <= numPriceLabels; i++) {
+        const price = minPrice + (adjustedRange * (numPriceLabels - i) / numPriceLabels);
+        const y = topPadding + (chartHeight * i / numPriceLabels);
+        
+        // Format price with comma separators
+        let formattedPrice;
+        if (price >= 1) {
+          formattedPrice = price.toFixed(2);
+        } else if (price >= 0.01) {
+          formattedPrice = price.toFixed(3);
+        } else {
+          formattedPrice = price.toFixed(6);
+        }
+        
+        // Add comma separators
+        const parts = formattedPrice.split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        const finalPrice = parts.join('.');
+        
+        ctx.fillText(finalPrice, priceTextX, y + 3);
+      }
+      
+      // STEP 5: Draw date/time labels based on timeframe
+      ctx.textAlign = 'center';
+      let dateIndices;
+      if (days === '1') {
+        dateIndices = [0, Math.floor((data.length - 1) / 3), Math.floor((data.length - 1) * 2 / 3), data.length - 1];
+      } else {
+        dateIndices = [0, Math.floor(data.length / 2), data.length - 1];
+      }
+
+      dateIndices.forEach((i, index) => {
+        if (data[i]) {
+          let x = leftPadding + (i / Math.max(1, data.length - 1)) * chartWidth;
+          // Add padding for first and last labels
+          if(index === 0) {
+              x += 8;
+          } else if(index === dateIndices.length - 1) {
+              x -= gapBetweenChartAndPrices; // Move last date left by gap amount
+          }
+
+          let dateStr;
+          if (days === '1') {
+            dateStr = data[i].date.toLocaleTimeString('pl-PL', { 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            });
+          } else {
+            dateStr = data[i].date.toLocaleDateString('en-US', { 
+              month: 'short', 
+              day: 'numeric' 
+            });
+          }
+          ctx.fillText(dateStr, x, height - bottomPadding + 15);
+        }
+      });
+      
+      // STEP 6: Draw candlesticks in the calculated chart area
+      const candleWidth = Math.max(2, Math.min(10, chartWidth / data.length * 0.7));
+      
+      data.forEach((candle, i) => {
+        const x = leftPadding + (i / Math.max(1, data.length - 1)) * chartWidth;
+        const yHigh = topPadding + ((maxPrice - candle.high) / adjustedRange) * chartHeight;
+        const yLow = topPadding + ((maxPrice - candle.low) / adjustedRange) * chartHeight;
+        const yOpen = topPadding + ((maxPrice - candle.open) / adjustedRange) * chartHeight;
+        const yClose = topPadding + ((maxPrice - candle.close) / adjustedRange) * chartHeight;
+        
+        const isBullish = candle.close >= candle.open;
+        const color = isBullish ? bullColor : bearColor;
+        
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.lineWidth = 1;
+        
+        // Draw wick
+        ctx.beginPath();
+        ctx.moveTo(x, yHigh);
+        ctx.lineTo(x, yLow);
+        ctx.stroke();
+        
+        // Draw body
+        const bodyTop = Math.min(yOpen, yClose);
+        const bodyHeight = Math.max(1, Math.abs(yClose - yOpen));
+        ctx.fillRect(x - candleWidth/2, bodyTop, candleWidth, bodyHeight);
+      });
+      
+      // Store data for color updates
+      window.currentCanvasData = data;
+    }
+
+    function updateIntervalOptions(days) {
+      const intervalSelect = document.getElementById('interval');
+      const currentInterval = intervalSelect.value;
+      
+      const validIntervals = {
+        "1": [
+          { value: "5m", label: "5 minutes" },
+          { value: "15m", label: "15 minutes" },
+          { value: "30m", label: "30 minutes" },
+          { value: "60m", label: "1 hour" }
+        ],
+        "5": [
+          { value: "15m", label: "15 minutes" },
+          { value: "30m", label: "30 minutes" },
+          { value: "60m", label: "1 hour" },
+          { value: "1d", label: "1 day" }
+        ],
+        "30": [
+          { value: "60m", label: "1 hour" },
+          { value: "1d", label: "1 day" },
+          { value: "1wk", label: "1 week" }
+        ],
+        "90": [
+          { value: "1d", label: "1 day" },
+          { value: "1wk", label: "1 week" }
+        ],
+        "180": [
+          { value: "1d", label: "1 day" },
+          { value: "1wk", label: "1 week" }
+        ],
+        "365": [
+          { value: "1d", label: "1 day" },
+          { value: "1wk", label: "1 week" },
+          { value: "1mo", label: "1 month" }
+        ],
+        "ytd": [
+          { value: "1d", label: "1 day" },
+          { value: "1wk", label: "1 week" },
+          { value: "1mo", label: "1 month" }
+        ],
+        "1825": [
+          { value: "1wk", label: "1 week" },
+          { value: "1mo", label: "1 month" }
+        ],
+        "max": [
+          { value: "1wk", label: "1 week" },
+          { value: "1mo", label: "1 month" }
+        ],
+        "custom": [
+          { value: "1d", label: "1 day" },
+          { value: "1wk", label: "1 week" },
+          { value: "1mo", label: "1 month" }
+        ]
+      };
+
+      const intervals = validIntervals[days] || validIntervals["30"];
+      intervalSelect.innerHTML = '';
+
+      intervals.forEach(interval => {
+        const option = document.createElement('option');
+        option.value = interval.value;
+        option.textContent = interval.label;
+        intervalSelect.appendChild(option);
+      });
+
+      if (intervals.some(i => i.value === currentInterval)) {
+        intervalSelect.value = currentInterval;
+      } else {
+        if (days === "1") {
+          intervalSelect.value = "30m";
+        } else if (days === "5") {
+          intervalSelect.value = "60m";
+        } else if (days === "1825" || days === "max") {
+          intervalSelect.value = "1wk";
+        } else {
+          intervalSelect.value = "1d";
+        }
+      }
+    }
+
+    function fetchChart(days, symbol) {
+      const now = Math.floor(Date.now() / 1000);
+      let start;
+
+      updateIntervalOptions(days);
+      const interval = document.getElementById('interval').value;
+      const useCustomRange = document.getElementById('useCustomRange').checked;
+
+      if (useCustomRange && days === 'custom') {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        
+        if (startDate && endDate) {
+          start = Math.floor(new Date(startDate).getTime() / 1000);
+          const end = Math.floor(new Date(endDate).getTime() / 1000);
+          
+          const url = 'https://sharescomcharts.petebaran.workers.dev/?symbol=' + symbol + '&interval=' + interval + '&start=' + start + '&end=' + end;
+          
+          document.getElementById('chart').innerHTML = '<div class="loading">Loading custom date range...</div>';
+          
+          fetch(url)
+            .then(res => res.json())
+            .then(json => {
+              const result = json.chart.result[0];
+              window.chartData = result;
+              renderPreview(result);
+            })
+            .catch(error => {
+              console.error('Error fetching data:', error);
+              document.getElementById('chart').innerHTML = '<div class="error">Error loading chart data. Please try again.</div>';
+            });
+          return;
+        } else {
+          alert('Please select both start and end dates.');
+          return;
+        }
+      }
+
+      // Standard timeframe logic
+      if (days === "ytd") {
+        const jan1 = new Date(new Date().getFullYear(), 0, 1).getTime();
+        start = Math.floor(jan1 / 1000);
+      } else if (days !== "max") {
+        start = now - days * 24 * 60 * 60;
+      }
+
+      const url = 'https://sharescomcharts.petebaran.workers.dev/?symbol=' + symbol + '&interval=' + interval + (start ? '&start=' + start + '&end=' + now : '');
+
+      document.getElementById('chart').innerHTML = '<div class="loading">Loading chart data...</div>';
+
+      fetch(url)
+        .then(res => res.json())
+        .then(json => {
+          const result = json.chart.result[0];
+          
+          // Filter weekends for daily+ intervals
+          if (interval === '1d' || interval === '1wk' || interval === '1mo') {
+            const filteredTimestamps = [];
+            const filteredOpen = [];
+            const filteredHigh = [];
+            const filteredLow = [];
+            const filteredClose = [];
+            const filteredVolume = [];
+            
+            for (let i = 0; i < result.timestamp.length; i++) {
+              const date = new Date(result.timestamp[i] * 1000);
+              const dayOfWeek = date.getDay();
+              
+              // Keep weekdays (1-5), filter out weekends (0=Sunday, 6=Saturday)
+              if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                filteredTimestamps.push(result.timestamp[i]);
+                filteredOpen.push(result.indicators.quote[0].open[i]);
+                filteredHigh.push(result.indicators.quote[0].high[i]);
+                filteredLow.push(result.indicators.quote[0].low[i]);
+                filteredClose.push(result.indicators.quote[0].close[i]);
+                if (result.indicators.quote[0].volume && result.indicators.quote[0].volume[i] != null) {
+                  filteredVolume.push(result.indicators.quote[0].volume[i]);
+                }
+              }
+            }
+            
+            // Update the result with filtered data
+            result.timestamp = filteredTimestamps;
+            result.indicators.quote[0].open = filteredOpen;
+            result.indicators.quote[0].high = filteredHigh;
+            result.indicators.quote[0].low = filteredLow;
+            result.indicators.quote[0].close = filteredClose;
+            if (result.indicators.quote[0].volume) {
+              result.indicators.quote[0].volume = filteredVolume;
+            }
+          }
+          
+          window.chartData = result;
+          renderPreview(result);
+        })
+        .catch(error => {
+          console.error('Error fetching data:', error);
+          document.getElementById('chart').innerHTML = '<div class="error">Error loading chart data. Please try again.</div>';
+        });
+    }
+
+    function filterSymbols(searchTerm) {
+      const categorySelect = document.getElementById('category');
+      const selectedCategory = categorySelect.value;
+      const symbols = instruments[selectedCategory] || [];
+      
+      if (!searchTerm) {
+        filteredSymbols = symbols;
+      } else {
+        filteredSymbols = symbols.filter(symbol => 
+          symbol.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          symbol.symbol.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
+      
+      renderSymbolList();
+    }
+
+    function renderSymbolList() {
+      const symbolList = document.getElementById('symbolList');
+      symbolList.innerHTML = '';
+      
+      // Show ALL filtered symbols
+      filteredSymbols.forEach(symbol => {
+        const div = document.createElement('div');
+        div.className = 'symbol-option';
+        if (symbol.symbol === currentSymbol) {
+          div.classList.add('selected');
+        }
+        div.textContent = symbol.label;
+        div.addEventListener('click', () => selectSymbol(symbol.symbol));
+        symbolList.appendChild(div);
+      });
+    }
+
+    function selectSymbol(symbol) {
+      currentSymbol = symbol;
+      const foundSymbol = filteredSymbols.find(s => s.symbol === symbol);
+      document.getElementById('symbolSearch').value = foundSymbol ? foundSymbol.label : symbol;
+      renderSymbolList();
+      
+      const activeBtn = document.querySelector('.timeframes button.active');
+      const days = activeBtn ? activeBtn.dataset.days : "30";
+      fetchChart(days, symbol);
+    }
+
+    // Event Listeners
+    document.getElementById('generate').addEventListener('click', function() {
+      if (window.chartData) {
+        const width = parseInt(document.getElementById('chartWidth').value);
+        const height = parseInt(document.getElementById('chartHeight').value);
+        const bullColor = document.getElementById('bullColor').value;
+        const bearColor = document.getElementById('bearColor').value;
+        const interval = document.getElementById('interval').value;
+        const useCustomRange = document.getElementById('useCustomRange').checked;
+        const strokeWeight = parseFloat(document.getElementById('strokeWeight').value) || 1;
+        
+        let timeframe;
+        if (useCustomRange) {
+          const startDate = document.getElementById('startDate').value;
+          const endDate = document.getElementById('endDate').value;
+          timeframe = 'Custom (' + startDate + ' to ' + endDate + ')';
+        } else {
+          const activeBtn = document.querySelector('.timeframes button.active');
+          timeframe = activeBtn ? activeBtn.dataset.days : "30";
+        }
+        
+        parent.postMessage({ 
+          pluginMessage: { 
+            type: 'chart-data', 
+            data: window.chartData,
+            interval: interval,
+            timeframe: timeframe,
+            config: {
+              width: width,
+              height: height,
+              bullColor: bullColor,
+              bearColor: bearColor,
+              showPriceGrid: document.getElementById('showPriceGrid').checked,
+              showDateGrid: document.getElementById('showDateGrid').checked,
+              showVolume: document.getElementById('showVolume').checked,
+              transparentBackground: document.getElementById('transparentBackground').checked,
+              strokeWeight: strokeWeight
+            }
+          } 
+        }, '*');
+      } else {
+        alert('No chart data available. Please wait for data to load.');
+      }
+    });
+
+    document.getElementById('category').addEventListener('change', function() {
+      filterSymbols('');
+      document.getElementById('symbolSearch').value = '';
+      if (filteredSymbols.length > 0) {
+        selectSymbol(filteredSymbols[0].symbol);
+      }
+    });
+
+    document.getElementById('symbolSearch').addEventListener('input', function(e) {
+      filterSymbols(e.target.value);
+    });
+
+    document.querySelectorAll('.timeframes button').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.timeframes button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('useCustomRange').checked = false;
+        document.getElementById('dateRangeInputs').style.display = 'none';
+        document.querySelector('.timeframes').style.opacity = '1';
+        document.querySelector('.timeframes').style.pointerEvents = 'auto';
+        fetchChart(btn.dataset.days, currentSymbol);
+      });
+    });
+
+    // Add interval change listener
+    document.getElementById('interval').addEventListener('change', function() {
+      const useCustomRange = document.getElementById('useCustomRange').checked;
+      if (useCustomRange) {
+        fetchChart('custom', currentSymbol);
+      } else {
+        const activeBtn = document.querySelector('.timeframes button.active');
+        const days = activeBtn ? activeBtn.dataset.days : "30";
+        fetchChart(days, currentSymbol);
+      }
+    });
+
+    // Custom date range toggle
+    document.getElementById('useCustomRange').addEventListener('change', function(e) {
+      const dateRangeInputs = document.getElementById('dateRangeInputs');
+      
+      if (e.target.checked) {
+        dateRangeInputs.style.display = 'block';
+        timeframes.style.opacity = '0.5';
+        timeframes.style.pointerEvents = 'none';
+        
+        // Clear active timeframe buttons
+        document.querySelectorAll('.timeframes button').forEach(b => b.classList.remove('active'));
+        
+        // Set default dates (last 3 months)
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setMonth(endDate.getMonth() - 3);
+        
+        document.getElementById('endDate').value = endDate.toISOString().split('T')[0];
+        document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
+      } else {
+        dateRangeInputs.style.display = 'none';
+        timeframes.style.opacity = '1';
+        timeframes.style.pointerEvents = 'auto';
+        
+        // Reactivate default timeframe
+        const defaultButton = document.querySelector('[data-days="30"]');
+        if (defaultButton) {
+          defaultButton.classList.add('active');
+          fetchChart("30", currentSymbol);
+        }
+      }
+    });
+
+    // Apply custom date range
+    document.getElementById('applyDateRange').addEventListener('click', function() {
+      fetchChart('custom', currentSymbol);
+    });
+
+    // Color change listeners to update preview
+    document.getElementById('bullColor').addEventListener('change', function() {
+      if (window.currentCanvasData) {
+        drawCandlestickChart(window.currentCanvasData);
+      }
+    });
+
+    document.getElementById('bearColor').addEventListener('change', function() {
+      if (window.currentCanvasData) {
+        drawCandlestickChart(window.currentCanvasData);
+      }
+    });
+
+    // Grid change listeners
+    document.getElementById('showPriceGrid').addEventListener('change', function() {
+      if (window.currentCanvasData) {
+        drawCandlestickChart(window.currentCanvasData);
+      }
+    });
+
+    document.getElementById('showDateGrid').addEventListener('change', function() {
+      if (window.currentCanvasData) {
+        drawCandlestickChart(window.currentCanvasData);
+      }
+    });
+
+    // Initialize
+    window.addEventListener('load', function() {
+      console.log('Initializing CC Charts Pro...');
+      const categorySelect = document.getElementById('category');
+      
+      // Clear and populate categories
+      categorySelect.innerHTML = '';
+      Object.keys(instruments).forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        opt.textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
+        categorySelect.appendChild(opt);
+      });
+      
+      // Set default to stocks and initialize
+      categorySelect.value = 'stocks';
+      filterSymbols('');
+      
+      if (filteredSymbols.length > 0) {
+        selectSymbol(filteredSymbols[0].symbol);
+      }
+      
+      const defaultButton = document.querySelector('[data-days="30"]');
+      if (defaultButton) {
+        defaultButton.classList.add('active');
+        fetchChart("30", currentSymbol);
+      }
+    });
+  </script>
+</body>
+</html>
+

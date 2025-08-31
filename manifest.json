@@ -1,0 +1,13 @@
+{
+  "name": "CC Charts Pro",
+  "id": "cc-charts-pro-2025-08-30",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "editorType": ["figma"],
+  "networkAccess": {
+    "allowedDomains": [
+      "https://sharescomcharts.petebaran.workers.dev"
+    ]
+  }
+}
