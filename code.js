@@ -11,6 +11,15 @@ figma.ui.onmessage = async function(msg) {
     try {
       await figma.loadFontAsync({ family: "Inter", style: "Regular" });
       await figma.loadFontAsync({ family: "Reddit Mono", style: "Regular" });
+
+      // Route to appropriate chart generator based on chart type
+      const chartType = msg.chartType || (msg.config && msg.config.chartType) || 'candles';
+      if (chartType === 'line') {
+        await generateLineChart(msg);
+        return;
+      }
+
+      // Continue with candlestick chart generation below...
       
       const data = msg.data;
       const config = msg.config || {
@@ -456,6 +465,330 @@ figma.ui.onmessage = async function(msg) {
     }
   }
 };
+
+async function generateLineChart(msg) {
+  const data = msg.data;
+  const config = msg.config || {
+    width: 600,
+    height: 400,
+    bullColor: '#00b386',
+    bearColor: '#ff4d4d',
+    showPriceGrid: true,
+    showDateGrid: true,
+    transparentBackground: false,
+    strokeWeight: 1
+  };
+
+  const timestamps = data.timestamp;
+  const ohlc = data.indicators.quote[0];
+
+  const canvasWidth = config.width;
+  const canvasHeight = config.height;
+
+  // Build descriptive title
+  const symbolMatch = (data.meta && data.meta.symbol) || "CHART";
+  const intervalText = msg.interval || "DAY";
+  const timeframeText = getTimeframeDisplayText(msg.timeframe || "30");
+  const sizeText = canvasWidth + "x" + canvasHeight;
+  const frameTitle = symbolMatch + " | " + intervalText + " | " + timeframeText + " | " + sizeText + " | Line";
+
+  // Create main frame
+  const frame = figma.createFrame();
+  frame.resize(canvasWidth, canvasHeight);
+  frame.name = frameTitle;
+
+  // Set background
+  if (config.transparentBackground) {
+    frame.fills = [];
+  } else {
+    frame.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
+  }
+
+  frame.cornerRadius = 8;
+  frame.effects = [{
+    type: 'DROP_SHADOW',
+    visible: true,
+    color: { r: 0, g: 0, b: 0, a: 0.1 },
+    blendMode: 'NORMAL',
+    offset: { x: 0, y: 2 },
+    radius: 8,
+    spread: 0
+  }];
+  figma.currentPage.appendChild(frame);
+
+  // Create layers
+  const backgroundLayer = figma.createFrame();
+  backgroundLayer.name = "Background";
+  backgroundLayer.resize(canvasWidth, canvasHeight);
+  backgroundLayer.fills = [];
+  frame.appendChild(backgroundLayer);
+
+  const gridLayer = figma.createFrame();
+  gridLayer.name = "Grid";
+  gridLayer.resize(canvasWidth, canvasHeight);
+  gridLayer.fills = [];
+  backgroundLayer.appendChild(gridLayer);
+
+  const labelsLayer = figma.createFrame();
+  labelsLayer.name = "Labels";
+  labelsLayer.resize(canvasWidth, canvasHeight);
+  labelsLayer.fills = [];
+  backgroundLayer.appendChild(labelsLayer);
+
+  const lineLayer = figma.createFrame();
+  lineLayer.name = "Line";
+  lineLayer.resize(canvasWidth, canvasHeight);
+  lineLayer.fills = [];
+  frame.appendChild(lineLayer);
+
+  // Layout calculations
+  const topPadding = 40;
+  const bottomPadding = 40;
+  const leftPadding = 24;
+  const framePadding = 24;
+  const gapBetweenChartAndPrices = 24;
+
+  const availableHeight = canvasHeight - topPadding - bottomPadding;
+
+  // Calculate price range using close prices
+  let minPrice = Infinity;
+  let maxPrice = -Infinity;
+  for (let i = 0; i < timestamps.length; i++) {
+    const close = ohlc.close[i];
+    if (close != null && close > maxPrice) maxPrice = close;
+    if (close != null && close < minPrice) minPrice = close;
+  }
+
+  const priceRange = maxPrice - minPrice;
+  const padding = priceRange * 0.1;
+  minPrice -= padding;
+  maxPrice += padding;
+  const adjustedRange = maxPrice - minPrice;
+  const scale = availableHeight / adjustedRange;
+
+  // Measure price label widths
+  const numPriceLines = 8;
+  let maxPriceLabelWidth = 0;
+  const tempPriceTexts = [];
+
+  for (let i = 0; i <= numPriceLines; i++) {
+    const price = minPrice + (adjustedRange * i / numPriceLines);
+    if (i === 0 || i === numPriceLines) continue;
+
+    const tempPriceText = figma.createText();
+    tempPriceText.characters = formatPrice(price);
+    tempPriceText.fontSize = 10;
+    tempPriceText.fontName = { family: "Reddit Mono", style: "Regular" };
+    tempPriceTexts.push(tempPriceText);
+
+    const textWidth = tempPriceText.width;
+    maxPriceLabelWidth = Math.max(maxPriceLabelWidth, textWidth);
+  }
+
+  // Calculate layout
+  const rightPadding = framePadding + maxPriceLabelWidth + gapBetweenChartAndPrices;
+  const lineAreaWidth = canvasWidth - leftPadding - rightPadding;
+  const priceLabelX = leftPadding + lineAreaWidth + gapBetweenChartAndPrices;
+
+  // Clean up temporary texts
+  tempPriceTexts.forEach(text => text.remove());
+
+  // Create title
+  const titleText = figma.createText();
+  titleText.characters = symbolMatch + " - Line Chart";
+  titleText.x = leftPadding;
+  titleText.y = 15;
+  titleText.fontSize = 16;
+  titleText.fontName = { family: "Inter", style: "Regular" };
+  titleText.fills = [{ type: 'SOLID', color: { r: 0.4, g: 0.482, b: 0.573 } }];
+  titleText.name = "Chart Title";
+  labelsLayer.appendChild(titleText);
+
+  // Draw grid lines and labels
+  if (config.showPriceGrid) {
+    for (let i = 0; i <= numPriceLines; i++) {
+      const price = minPrice + (adjustedRange * i / numPriceLines);
+      const y = topPadding + (maxPrice - price) * scale;
+
+      if (i === 0 || i === numPriceLines) continue;
+
+      const gridLine = figma.createLine();
+      gridLine.strokeWeight = 0.5;
+      gridLine.strokes = [{ type: 'SOLID', color: { r: 0.804, g: 0.82, b: 0.835 } }];
+      gridLine.strokeCap = 'SQUARE';
+      gridLine.strokeJoin = 'MITER';
+      gridLine.dashPattern = [2, 3];
+      gridLine.x = leftPadding;
+      gridLine.y = y;
+      gridLine.resize(lineAreaWidth, 0);
+      gridLayer.appendChild(gridLine);
+
+      const priceText = figma.createText();
+      priceText.characters = formatPrice(price);
+      priceText.fontSize = 10;
+      priceText.fontName = { family: "Reddit Mono", style: "Regular" };
+      priceText.fills = [{ type: 'SOLID', color: { r: 0.4, g: 0.482, b: 0.573 } }];
+      priceText.name = "Price Label " + price.toFixed(2);
+      priceText.x = priceLabelX;
+      priceText.y = y - 5;
+      labelsLayer.appendChild(priceText);
+    }
+  }
+
+  // Draw date labels
+  if (config.showDateGrid) {
+    const dateIndices = [0, Math.floor(timestamps.length / 2), timestamps.length - 1];
+
+    for (let idx = 0; idx < dateIndices.length; idx++) {
+      const i = dateIndices[idx];
+      const date = new Date(timestamps[i] * 1000);
+      const dateStr = formatDate(date, timestamps.length);
+
+      const dateText = figma.createText();
+      dateText.characters = dateStr;
+
+      if (idx === 0) {
+        dateText.x = leftPadding;
+      } else if (idx === dateIndices.length - 1) {
+        const lastX = leftPadding + lineAreaWidth;
+        dateText.x = lastX - 50;
+      } else {
+        dateText.x = leftPadding + (lineAreaWidth / 2) - 25;
+      }
+
+      dateText.y = canvasHeight - 25;
+      dateText.fontSize = 10;
+      dateText.fontName = { family: "Reddit Mono", style: "Regular" };
+      dateText.fills = [{ type: 'SOLID', color: { r: 0.4, g: 0.482, b: 0.573 } }];
+
+      if (idx === 0) {
+        dateText.textAlignHorizontal = 'LEFT';
+      } else if (idx === dateIndices.length - 1) {
+        dateText.textAlignHorizontal = 'RIGHT';
+      } else {
+        dateText.textAlignHorizontal = 'CENTER';
+      }
+
+      dateText.name = "Date Label " + dateStr;
+      labelsLayer.appendChild(dateText);
+    }
+  }
+
+  // Determine line color
+  const firstPrice = ohlc.open[0];
+  const lastPrice = ohlc.close[ohlc.close.length - 1];
+  const isPositive = lastPrice >= firstPrice;
+  const lineColor = isPositive ? config.bullColor : config.bearColor;
+  const lineRgb = hexToRgb(lineColor);
+
+  // Draw line using vector network
+  const lineVector = figma.createVector();
+  lineVector.name = "Line Chart";
+
+  const points = [];
+  const validIndices = [];
+
+  for (let i = 0; i < timestamps.length; i++) {
+    const close = ohlc.close[i];
+    if (close == null) continue;
+
+    const x = leftPadding + (i / Math.max(1, timestamps.length - 1)) * lineAreaWidth;
+    const y = topPadding + (maxPrice - close) * scale;
+
+    points.push({ x, y });
+    validIndices.push(i);
+  }
+
+  // Create vector path
+  if (points.length > 1) {
+    const segments = [];
+    for (let i = 0; i < points.length - 1; i++) {
+      segments.push({
+        start: i,
+        end: i + 1,
+        tangentStart: { x: 0, y: 0 },
+        tangentEnd: { x: 0, y: 0 }
+      });
+    }
+
+    lineVector.vectorPaths = [{
+      windingRule: 'NONE',
+      data: points.map((p, i) => {
+        if (i === 0) return `M ${p.x} ${p.y}`;
+        return `L ${p.x} ${p.y}`;
+      }).join(' ')
+    }];
+
+    lineVector.strokes = [{ type: 'SOLID', color: lineRgb }];
+    lineVector.strokeWeight = config.strokeWeight * 2;
+    lineVector.strokeCap = 'ROUND';
+    lineVector.strokeJoin = 'ROUND';
+    lineLayer.appendChild(lineVector);
+  }
+
+  // Add current price indicator
+  const currentPrice = ohlc.close[ohlc.close.length - 1];
+  const currentPriceY = topPadding + (maxPrice - currentPrice) * scale;
+
+  const currentPriceLine = figma.createLine();
+  currentPriceLine.strokeWeight = 1;
+  currentPriceLine.strokes = [{ type: 'SOLID', color: lineRgb }];
+  currentPriceLine.strokeCap = 'SQUARE';
+  currentPriceLine.strokeJoin = 'MITER';
+  currentPriceLine.dashPattern = [2, 4];
+  currentPriceLine.x = leftPadding;
+  currentPriceLine.y = currentPriceY;
+  currentPriceLine.resize(lineAreaWidth, 0);
+  currentPriceLine.name = "Current Price Line";
+  gridLayer.appendChild(currentPriceLine);
+
+  // Create current price tag
+  const priceTagText = figma.createText();
+  priceTagText.characters = formatPrice(currentPrice);
+  priceTagText.fontSize = 10;
+  priceTagText.fontName = { family: "Reddit Mono", style: "Regular" };
+  priceTagText.fills = [{ type: 'SOLID', color: { r: 1, g: 1, b: 1 } }];
+  priceTagText.textAlignHorizontal = 'CENTER';
+  priceTagText.textAlignVertical = 'CENTER';
+  priceTagText.textAutoResize = 'WIDTH_AND_HEIGHT';
+  priceTagText.textTruncation = 'DISABLED';
+  priceTagText.name = "Current Price Tag";
+
+  try {
+    priceTagText.leadingTrim = 'CAP_HEIGHT';
+  } catch (e) {}
+
+  const horizontalPadding = 8;
+  const verticalPadding = 8;
+  const priceTagTextWidth = priceTagText.width;
+  const priceTagTextHeight = priceTagText.height;
+  const priceTagWidth = priceTagTextWidth + (horizontalPadding * 2);
+  const priceTagHeight = priceTagTextHeight + (verticalPadding * 2);
+
+  const priceTagX = canvasWidth - 16 - priceTagWidth;
+  const priceTagY = currentPriceY - (priceTagHeight / 2);
+
+  const priceTagBg = figma.createRectangle();
+  priceTagBg.resize(priceTagWidth, priceTagHeight);
+  priceTagBg.x = priceTagX;
+  priceTagBg.y = priceTagY;
+  priceTagBg.fills = [{ type: 'SOLID', color: lineRgb }];
+  priceTagBg.cornerRadius = 3;
+  priceTagBg.name = "Current Price Tag Background";
+  labelsLayer.appendChild(priceTagBg);
+
+  priceTagText.x = priceTagX + horizontalPadding;
+  priceTagText.y = priceTagY + verticalPadding;
+  labelsLayer.appendChild(priceTagText);
+
+  figma.viewport.scrollAndZoomIntoView([frame]);
+
+  const priceChange = lastPrice - firstPrice;
+  const percentChange = ((priceChange / firstPrice) * 100).toFixed(2);
+  const changeText = priceChange >= 0 ? "+" + percentChange + "%" : percentChange + "%";
+
+  figma.notify("Line chart generated successfully! " + changeText, { timeout: 3000 });
+}
 
 async function createCandlestickChart(dataPoints, config, symbol) {
   const canvasWidth = config.width;

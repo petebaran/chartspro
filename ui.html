@@ -297,15 +297,24 @@
       <div class="section">
         <h3 class="section-title">Data Selection</h3>
         <div class="form-group">
+          <label for="chartType">Chart Type:</label>
+          <select id="chartType">
+            <option value="candles">Candlestick Chart</option>
+            <option value="line">Line Chart</option>
+          </select>
+        </div>
+
+        <div class="form-group">
           <label for="interval">Interval:</label>
           <select id="interval">
-            <option value="5m">5 minutes</option>
-            <option value="15m">15 minutes</option>
-            <option value="30m">30 minutes</option>
-            <option value="60m">1 hour</option>
-            <option value="1d">1 day</option>
-            <option value="1wk">1 week</option>
-            <option value="1mo">1 month</option>
+            <option value="MINUTE">1 minute</option>
+            <option value="MINUTE_5">5 minutes</option>
+            <option value="MINUTE_15">15 minutes</option>
+            <option value="MINUTE_30">30 minutes</option>
+            <option value="HOUR">1 hour</option>
+            <option value="HOUR_4">4 hours</option>
+            <option value="DAY">1 day</option>
+            <option value="WEEK">1 week</option>
           </select>
         </div>
 
@@ -412,7 +421,7 @@
   </div>
 
   <script>
-    // Comprehensive instrument database
+    // Comprehensive instrument database - Capital.com EPICs
     const instruments = {
       stocks: [
         { symbol: "AAPL", label: "Apple Inc. (AAPL)" },
@@ -422,26 +431,9 @@
         { symbol: "NVDA", label: "NVIDIA Corporation (NVDA)" },
         { symbol: "META", label: "Meta Platforms Inc. (META)" },
         { symbol: "TSLA", label: "Tesla Inc. (TSLA)" },
-        { symbol: "BRK-B", label: "Berkshire Hathaway Inc. (BRK-B)" },
-        { symbol: "UNH", label: "UnitedHealth Group Inc. (UNH)" },
-        { symbol: "XOM", label: "Exxon Mobil Corporation (XOM)" },
-        { symbol: "JNJ", label: "Johnson & Johnson (JNJ)" },
         { symbol: "JPM", label: "JPMorgan Chase & Co. (JPM)" },
-        { symbol: "V", label: "Visa Inc. (V)" },
-        { symbol: "PG", label: "Procter & Gamble Co. (PG)" },
-        { symbol: "MA", label: "Mastercard Inc. (MA)" },
-        { symbol: "HD", label: "Home Depot Inc. (HD)" },
-        { symbol: "CVX", label: "Chevron Corporation (CVX)" },
-        { symbol: "ABBV", label: "AbbVie Inc. (ABBV)" },
-        { symbol: "PFE", label: "Pfizer Inc. (PFE)" },
-        { symbol: "KO", label: "Coca-Cola Company (KO)" },
         { symbol: "BAC", label: "Bank of America Corp. (BAC)" },
-        { symbol: "AVGO", label: "Broadcom Inc. (AVGO)" },
         { symbol: "WMT", label: "Walmart Inc. (WMT)" },
-        { symbol: "LLY", label: "Eli Lilly and Company (LLY)" },
-        { symbol: "CRM", label: "Salesforce Inc. (CRM)" },
-        { symbol: "TMO", label: "Thermo Fisher Scientific (TMO)" },
-        { symbol: "COST", label: "Costco Wholesale Corp. (COST)" },
         { symbol: "NFLX", label: "Netflix Inc. (NFLX)" },
         { symbol: "ADBE", label: "Adobe Inc. (ADBE)" },
         { symbol: "ORCL", label: "Oracle Corporation (ORCL)" },
@@ -449,176 +441,88 @@
         { symbol: "AMD", label: "Advanced Micro Devices (AMD)" },
         { symbol: "INTC", label: "Intel Corporation (INTC)" },
         { symbol: "QCOM", label: "QUALCOMM Inc. (QCOM)" },
-        { symbol: "AMAT", label: "Applied Materials Inc. (AMAT)" },
-        { symbol: "MU", label: "Micron Technology Inc. (MU)" },
-        { symbol: "PANW", label: "Palo Alto Networks (PANW)" },
-        { symbol: "CRWD", label: "CrowdStrike Holdings (CRWD)" },
-        { symbol: "SNOW", label: "Snowflake Inc. (SNOW)" },
-        { symbol: "NET", label: "Cloudflare Inc. (NET)" },
-        { symbol: "ZS", label: "Zscaler Inc. (ZS)" },
-        { symbol: "DDOG", label: "Datadog Inc. (DDOG)" },
-        { symbol: "OKTA", label: "Okta Inc. (OKTA)" },
-        { symbol: "PLTR", label: "Palantir Technologies (PLTR)" },
-        { symbol: "COIN", label: "Coinbase Global Inc. (COIN)" },
-        { symbol: "RBLX", label: "Roblox Corporation (RBLX)" },
-        { symbol: "SHOP", label: "Shopify Inc. (SHOP)" },
-        { symbol: "SQ", label: "Block Inc. (SQ)" },
         { symbol: "PYPL", label: "PayPal Holdings Inc. (PYPL)" },
-        { symbol: "SPOT", label: "Spotify Technology (SPOT)" },
         { symbol: "UBER", label: "Uber Technologies (UBER)" },
-        // European Stocks
-        { symbol: "ASML", label: "ASML Holding - Netherlands (ASML)" },
-        { symbol: "SAP", label: "SAP SE - Germany (SAP)" },
-        { symbol: "NVO", label: "Novo Nordisk - Denmark (NVO)" },
-        { symbol: "UL", label: "Unilever - UK/Netherlands (UL)" },
-        { symbol: "AZN", label: "AstraZeneca - UK (AZN)" },
-        { symbol: "BP", label: "BP plc - UK (BP)" },
-        { symbol: "GSK", label: "GlaxoSmithKline - UK (GSK)" },
-        // Asian Stocks
-        { symbol: "TSM", label: "Taiwan Semiconductor (TSM)" },
         { symbol: "BABA", label: "Alibaba Group - China (BABA)" },
-        { symbol: "TM", label: "Toyota Motor - Japan (TM)" },
-        { symbol: "SNY", label: "Sony Group - Japan (SNY)" },
-        { symbol: "HDB", label: "HDFC Bank - India (HDB)" },
-        { symbol: "IBN", label: "ICICI Bank - India (IBN)" },
-        { symbol: "INFY", label: "Infosys Limited - India (INFY)" },
-        { symbol: "JD", label: "JD.com Inc. - China (JD)" },
         { symbol: "NIO", label: "NIO Inc. - China (NIO)" }
       ].sort((a, b) => a.label.localeCompare(b.label)),
       
       crypto: [
-        { symbol: "BTC-USD", label: "Bitcoin (BTC-USD)" },
-        { symbol: "ETH-USD", label: "Ethereum (ETH-USD)" },
-        { symbol: "BNB-USD", label: "Binance Coin (BNB-USD)" },
-        { symbol: "XRP-USD", label: "Ripple (XRP-USD)" },
-        { symbol: "ADA-USD", label: "Cardano (ADA-USD)" },
-        { symbol: "SOL-USD", label: "Solana (SOL-USD)" },
-        { symbol: "DOGE-USD", label: "Dogecoin (DOGE-USD)" },
-        { symbol: "DOT-USD", label: "Polkadot (DOT-USD)" },
-        { symbol: "AVAX-USD", label: "Avalanche (AVAX-USD)" },
-        { symbol: "SHIB-USD", label: "Shiba Inu (SHIB-USD)" },
-        { symbol: "MATIC-USD", label: "Polygon (MATIC-USD)" },
-        { symbol: "LTC-USD", label: "Litecoin (LTC-USD)" },
-        { symbol: "LINK-USD", label: "Chainlink (LINK-USD)" },
-        { symbol: "UNI-USD", label: "Uniswap (UNI-USD)" },
-        { symbol: "ATOM-USD", label: "Cosmos (ATOM-USD)" },
-        { symbol: "VET-USD", label: "VeChain (VET-USD)" },
-        { symbol: "FIL-USD", label: "Filecoin (FIL-USD)" },
-        { symbol: "TRX-USD", label: "TRON (TRX-USD)" },
-        { symbol: "ETC-USD", label: "Ethereum Classic (ETC-USD)" },
-        { symbol: "XLM-USD", label: "Stellar (XLM-USD)" },
-        { symbol: "ALGO-USD", label: "Algorand (ALGO-USD)" },
-        { symbol: "HBAR-USD", label: "Hedera (HBAR-USD)" },
-        { symbol: "ICP-USD", label: "Internet Computer (ICP-USD)" },
-        { symbol: "APE-USD", label: "ApeCoin (APE-USD)" }
+        { symbol: "BTCUSD", label: "Bitcoin (BTC)" },
+        { symbol: "ETHUSD", label: "Ethereum (ETH)" },
+        { symbol: "XRPUSD", label: "Ripple (XRP)" },
+        { symbol: "ADAUSD", label: "Cardano (ADA)" },
+        { symbol: "SOLUSD", label: "Solana (SOL)" },
+        { symbol: "DOGEUSD", label: "Dogecoin (DOGE)" },
+        { symbol: "DOTUSD", label: "Polkadot (DOT)" },
+        { symbol: "LTCUSD", label: "Litecoin (LTC)" },
+        { symbol: "LINKUSD", label: "Chainlink (LINK)" }
       ].sort((a, b) => a.label.localeCompare(b.label)),
       
       etfs: [
         { symbol: "SPY", label: "SPDR S&P 500 ETF Trust (SPY)" },
         { symbol: "QQQ", label: "Invesco QQQ Trust (QQQ)" },
-        { symbol: "VTI", label: "Vanguard Total Stock Market (VTI)" },
         { symbol: "IWM", label: "iShares Russell 2000 ETF (IWM)" },
-        { symbol: "EFA", label: "iShares MSCI EAFE ETF (EFA)" },
-        { symbol: "EEM", label: "iShares MSCI Emerging Markets (EEM)" },
-        { symbol: "VEA", label: "Vanguard FTSE Developed Markets (VEA)" },
-        { symbol: "VWO", label: "Vanguard FTSE Emerging Markets (VWO)" },
-        { symbol: "GLD", label: "SPDR Gold Trust (GLD)" },
-        { symbol: "SLV", label: "iShares Silver Trust (SLV)" },
-        { symbol: "USO", label: "United States Oil Fund (USO)" },
-        { symbol: "TLT", label: "iShares 20+ Year Treasury Bond (TLT)" },
-        { symbol: "HYG", label: "iShares iBoxx High Yield Corporate (HYG)" },
-        { symbol: "LQD", label: "iShares iBoxx Investment Grade (LQD)" },
-        { symbol: "VNQ", label: "Vanguard Real Estate ETF (VNQ)" },
         { symbol: "XLF", label: "Financial Select Sector SPDR (XLF)" },
         { symbol: "XLK", label: "Technology Select Sector SPDR (XLK)" },
-        { symbol: "XLE", label: "Energy Select Sector SPDR (XLE)" },
-        { symbol: "XLV", label: "Health Care Select Sector SPDR (XLV)" },
-        { symbol: "XLI", label: "Industrial Select Sector SPDR (XLI)" },
-        { symbol: "XLP", label: "Consumer Staples Select Sector (XLP)" },
-        { symbol: "XLY", label: "Consumer Discretionary Select (XLY)" },
-        { symbol: "XLU", label: "Utilities Select Sector SPDR (XLU)" },
-        { symbol: "XLB", label: "Materials Select Sector SPDR (XLB)" },
-        { symbol: "ARKK", label: "ARK Innovation ETF (ARKK)" },
-        { symbol: "ARKQ", label: "ARK Autonomous Technology (ARKQ)" },
-        { symbol: "ARKG", label: "ARK Genomic Revolution (ARKG)" },
-        { symbol: "ICLN", label: "iShares Global Clean Energy (ICLN)" },
-        { symbol: "JETS", label: "US Global Jets ETF (JETS)" },
-        { symbol: "HACK", label: "ETFMG Prime Cyber Security (HACK)" }
+        { symbol: "XLE", label: "Energy Select Sector SPDR (XLE)" }
       ].sort((a, b) => a.label.localeCompare(b.label)),
       
       commodities: [
-        { symbol: "GC=F", label: "Gold Futures (GC=F)" },
-        { symbol: "SI=F", label: "Silver Futures (SI=F)" },
-        { symbol: "CL=F", label: "Crude Oil WTI Futures (CL=F)" },
-        { symbol: "BZ=F", label: "Brent Crude Oil Futures (BZ=F)" },
-        { symbol: "NG=F", label: "Natural Gas Futures (NG=F)" },
-        { symbol: "HG=F", label: "Copper Futures (HG=F)" },
-        { symbol: "PL=F", label: "Platinum Futures (PL=F)" },
-        { symbol: "PA=F", label: "Palladium Futures (PA=F)" },
-        { symbol: "ZC=F", label: "Corn Futures (ZC=F)" },
-        { symbol: "ZS=F", label: "Soybean Futures (ZS=F)" },
-        { symbol: "ZW=F", label: "Wheat Futures (ZW=F)" },
-        { symbol: "KC=F", label: "Coffee Futures (KC=F)" },
-        { symbol: "SB=F", label: "Sugar Futures (SB=F)" },
-        { symbol: "CC=F", label: "Cocoa Futures (CC=F)" },
-        { symbol: "CT=F", label: "Cotton Futures (CT=F)" }
+        { symbol: "GOLD", label: "Gold" },
+        { symbol: "SILVER", label: "Silver" },
+        { symbol: "OIL_CRUDE", label: "Crude Oil WTI" },
+        { symbol: "NATURAL_GAS", label: "Natural Gas" },
+        { symbol: "COPPER", label: "Copper" }
       ].sort((a, b) => a.label.localeCompare(b.label)),
       
       indices: [
-        // US Indices  
-        { symbol: "^GSPC", label: "S&P 500 (^GSPC)" },
-        { symbol: "^DJI", label: "Dow Jones 30 (^DJI)" },
-        { symbol: "^IXIC", label: "NASDAQ Composite (^IXIC)" },
-        { symbol: "^NDX", label: "NASDAQ 100 (^NDX)" },
-        { symbol: "^RUT", label: "Russell 2000 (^RUT)" },
-        { symbol: "^VIX", label: "VIX Volatility (^VIX)" },
-        
+        // US Indices
+        { symbol: "US500", label: "S&P 500" },
+        { symbol: "WALLSTREET", label: "Dow Jones 30" },
+        { symbol: "US_TECH_100", label: "NASDAQ 100" },
+        { symbol: "US2000", label: "Russell 2000" },
+        { symbol: "VOLATILITY", label: "VIX Volatility" },
+
         // European Indices
-        { symbol: "^FTSE", label: "FTSE 100 UK (^FTSE)" },
-        { symbol: "^GDAXI", label: "Germany 40 DAX (^GDAXI)" },
-        { symbol: "^FCHI", label: "France 40 CAC (^FCHI)" },
-        { symbol: "^STOXX50E", label: "EURO STOXX 50 (^STOXX50E)" },
-        { symbol: "^AEX", label: "Netherlands AEX (^AEX)" },
-        { symbol: "^IBEX", label: "Spain IBEX 35 (^IBEX)" },
-        { symbol: "^OMX", label: "Sweden OMX 30 (^OMX)" },
-        { symbol: "^SSMI", label: "Switzerland SMI (^SSMI)" },
-        
+        { symbol: "UK100", label: "FTSE 100 UK" },
+        { symbol: "GERMANY40", label: "Germany 40 DAX" },
+        { symbol: "FRANCE40", label: "France 40 CAC" },
+        { symbol: "EU_STOCKS_50", label: "EURO STOXX 50" },
+        { symbol: "NETHERLANDS25", label: "Netherlands AEX" },
+        { symbol: "SPAIN35", label: "Spain IBEX 35" },
+        { symbol: "SWITZERLAND20", label: "Switzerland SMI" },
+
         // Asian Pacific Indices
-        { symbol: "^N225", label: "Japan Nikkei 225 (^N225)" },
-        { symbol: "^HSI", label: "Hong Kong Hang Seng (^HSI)" },
-        { symbol: "000001.SS", label: "China Shanghai (000001.SS)" },
-        { symbol: "399001.SZ", label: "China Shenzhen (399001.SZ)" },
-        { symbol: "^KS11", label: "South Korea KOSPI (^KS11)" },
-        { symbol: "^TWII", label: "Taiwan Weighted (^TWII)" },
-        { symbol: "^AXJO", label: "Australia ASX 200 (^AXJO)" },
-        { symbol: "^STI", label: "Singapore STI (^STI)" },
-        { symbol: "^BSESN", label: "India Sensex (^BSESN)" },
-        { symbol: "^NSEI", label: "India Nifty 50 (^NSEI)" },
-        { symbol: "^BVSP", label: "Brazil IBOVESPA (^BVSP)" },
-        { symbol: "^GSPTSE", label: "Canada TSX (^GSPTSE)" }
+        { symbol: "JAPAN225", label: "Japan Nikkei 225" },
+        { symbol: "HONGKONG50", label: "Hong Kong Hang Seng" },
+        { symbol: "CHINA_A50", label: "China A50" },
+        { symbol: "AUSTRALIA200", label: "Australia ASX 200" },
+        { symbol: "INDIA50", label: "India Nifty 50" }
       ].sort((a, b) => a.label.localeCompare(b.label)),
       
       forex: [
-        { symbol: "EURUSD=X", label: "EUR/USD (EURUSD=X)" },
-        { symbol: "GBPUSD=X", label: "GBP/USD (GBPUSD=X)" },
-        { symbol: "USDJPY=X", label: "USD/JPY (USDJPY=X)" },
-        { symbol: "USDCHF=X", label: "USD/CHF (USDCHF=X)" },
-        { symbol: "AUDUSD=X", label: "AUD/USD (AUDUSD=X)" },
-        { symbol: "USDCAD=X", label: "USD/CAD (USDCAD=X)" },
-        { symbol: "NZDUSD=X", label: "NZD/USD (NZDUSD=X)" },
-        { symbol: "EURGBP=X", label: "EUR/GBP (EURGBP=X)" },
-        { symbol: "EURJPY=X", label: "EUR/JPY (EURJPY=X)" },
-        { symbol: "GBPJPY=X", label: "GBP/JPY (GBPJPY=X)" },
-        { symbol: "EURCHF=X", label: "EUR/CHF (EURCHF=X)" },
-        { symbol: "GBPCHF=X", label: "GBP/CHF (GBPCHF=X)" },
-        { symbol: "AUDCHF=X", label: "AUD/CHF (AUDCHF=X)" },
-        { symbol: "CADJPY=X", label: "CAD/JPY (CADJPY=X)" },
-        { symbol: "CHFJPY=X", label: "CHF/JPY (CHFJPY=X)" }
+        { symbol: "EURUSD", label: "EUR/USD" },
+        { symbol: "GBPUSD", label: "GBP/USD" },
+        { symbol: "USDJPY", label: "USD/JPY" },
+        { symbol: "USDCHF", label: "USD/CHF" },
+        { symbol: "AUDUSD", label: "AUD/USD" },
+        { symbol: "USDCAD", label: "USD/CAD" },
+        { symbol: "NZDUSD", label: "NZD/USD" },
+        { symbol: "EURGBP", label: "EUR/GBP" },
+        { symbol: "EURJPY", label: "EUR/JPY" },
+        { symbol: "GBPJPY", label: "GBP/JPY" },
+        { symbol: "EURCHF", label: "EUR/CHF" },
+        { symbol: "GBPCHF", label: "GBP/CHF" },
+        { symbol: "AUDCHF", label: "AUD/CHF" },
+        { symbol: "CADJPY", label: "CAD/JPY" },
+        { symbol: "CHFJPY", label: "CHF/JPY" }
       ].sort((a, b) => a.label.localeCompare(b.label))
     };
 
     let currentSymbol = "AAPL";
     let filteredSymbols = [];
+    let currentChartType = "candles";
 
     function renderPreview(result) {
       const timestamps = result.timestamp;
@@ -627,16 +531,16 @@
       // Filter data and prepare for custom drawing
       let filteredData = [];
       const interval = document.getElementById('interval').value;
-      
+
       for (let i = 0; i < timestamps.length; i++) {
         const date = new Date(timestamps[i] * 1000);
         const dayOfWeek = date.getDay();
-        
+
         // For daily+ intervals, skip weekends completely
-        if (interval === '1d' || interval === '1wk' || interval === '1mo') {
+        if (interval === 'DAY' || interval === 'WEEK') {
           if (dayOfWeek === 0 || dayOfWeek === 6) continue; // Skip weekends
         }
-        
+
         if (ohlc.open[i] != null && ohlc.high[i] != null && ohlc.low[i] != null && ohlc.close[i] != null) {
           filteredData.push({
             date: date,
@@ -648,7 +552,13 @@
         }
       }
 
-      drawCandlestickChart(filteredData);
+      // Render based on chart type
+      const chartType = document.getElementById('chartType').value;
+      if (chartType === 'line') {
+        drawLineChart(filteredData);
+      } else {
+        drawCandlestickChart(filteredData);
+      }
     }
 
     function drawCandlestickChart(data) {
@@ -856,58 +766,292 @@
       window.currentCanvasData = data;
     }
 
+    function drawLineChart(data) {
+      const chartEl = document.getElementById("chart");
+      chartEl.innerHTML = '<canvas id="lineCanvas"></canvas>';
+
+      const canvas = document.getElementById('lineCanvas');
+      const ctx = canvas.getContext('2d');
+
+      // Set canvas size to match container
+      const rect = chartEl.getBoundingClientRect();
+      canvas.width = rect.width * window.devicePixelRatio;
+      canvas.height = rect.height * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+      const width = rect.width;
+      const height = rect.height;
+
+      if (data.length === 0) return;
+
+      // Find price range
+      let minPrice = Math.min(...data.map(d => d.close));
+      let maxPrice = Math.max(...data.map(d => d.close));
+      const priceRange = maxPrice - minPrice;
+      minPrice -= priceRange * 0.1; // Add 10% padding
+      maxPrice += priceRange * 0.1; // Add 10% padding
+      const adjustedRange = maxPrice - minPrice;
+
+      // Colors
+      const lineColor = data[data.length - 1].close >= data[0].open ?
+        document.getElementById('bullColor').value :
+        document.getElementById('bearColor').value;
+      const gridColor = '#eef2f7';
+      const textColor = '#4a5568';
+
+      // Get current timeframe to adjust labels
+      const activeBtn = document.querySelector('.timeframes button.active');
+      const days = activeBtn ? activeBtn.dataset.days : "30";
+
+      // Clear canvas
+      ctx.clearRect(0, 0, width, height);
+
+      // Layout
+      ctx.fillStyle = textColor;
+      ctx.font = '10px -apple-system, sans-serif';
+
+      const numPriceLabels = 5;
+      let maxPriceTextWidth = 0;
+
+      // Measure all price texts to find the maximum width
+      for (let i = 0; i <= numPriceLabels; i++) {
+        const price = minPrice + (adjustedRange * (numPriceLabels - i) / numPriceLabels);
+        let formattedPrice;
+        if (price >= 1) {
+          formattedPrice = price.toFixed(2);
+        } else if (price >= 0.01) {
+          formattedPrice = price.toFixed(3);
+        } else {
+          formattedPrice = price.toFixed(6);
+        }
+        const parts = formattedPrice.split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        const finalPrice = parts.join('.');
+        const textWidth = ctx.measureText(finalPrice).width;
+        maxPriceTextWidth = Math.max(maxPriceTextWidth, textWidth);
+      }
+
+      // Calculate layout
+      const leftPadding = 16;
+      const gapBetweenChartAndPrices = 24;
+      const rightPadding = maxPriceTextWidth + gapBetweenChartAndPrices + 8;
+      const topPadding = 24;
+      const bottomPadding = 30;
+
+      const chartWidth = width - leftPadding - rightPadding;
+      const chartHeight = height - topPadding - bottomPadding;
+      const priceTextX = width - maxPriceTextWidth - 8;
+
+      // Draw grid lines if enabled
+      if (document.getElementById('showPriceGrid').checked) {
+        ctx.strokeStyle = gridColor;
+        ctx.lineWidth = 1;
+        ctx.setLineDash([2, 4]);
+        for (let i = 0; i <= numPriceLabels; i++) {
+          const y = topPadding + (chartHeight * i / numPriceLabels);
+          ctx.beginPath();
+          ctx.moveTo(leftPadding, y);
+          ctx.lineTo(leftPadding + chartWidth, y);
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+      }
+
+      if (document.getElementById('showDateGrid').checked) {
+        ctx.strokeStyle = gridColor;
+        ctx.lineWidth = 1;
+        ctx.setLineDash([2, 4]);
+        const dateStep = Math.max(1, Math.floor(data.length / 5));
+        for (let i = dateStep; i < data.length - 1; i += dateStep) {
+          const x = leftPadding + (i / Math.max(1, data.length - 1)) * chartWidth;
+          ctx.beginPath();
+          ctx.moveTo(x, topPadding);
+          ctx.lineTo(x, height - bottomPadding);
+          ctx.stroke();
+        }
+        ctx.setLineDash([]);
+      }
+
+      // Draw price labels
+      ctx.fillStyle = textColor;
+      ctx.font = '10px -apple-system, sans-serif';
+      ctx.textAlign = 'left';
+
+      for (let i = 0; i <= numPriceLabels; i++) {
+        const price = minPrice + (adjustedRange * (numPriceLabels - i) / numPriceLabels);
+        const y = topPadding + (chartHeight * i / numPriceLabels);
+
+        let formattedPrice;
+        if (price >= 1) {
+          formattedPrice = price.toFixed(2);
+        } else if (price >= 0.01) {
+          formattedPrice = price.toFixed(3);
+        } else {
+          formattedPrice = price.toFixed(6);
+        }
+        const parts = formattedPrice.split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        const finalPrice = parts.join('.');
+
+        ctx.fillText(finalPrice, priceTextX, y + 3);
+      }
+
+      // Draw date labels
+      ctx.textAlign = 'center';
+      let dateIndices;
+      if (days === '1') {
+        dateIndices = [0, Math.floor((data.length - 1) / 3), Math.floor((data.length - 1) * 2 / 3), data.length - 1];
+      } else {
+        dateIndices = [0, Math.floor(data.length / 2), data.length - 1];
+      }
+
+      dateIndices.forEach((i, index) => {
+        if (data[i]) {
+          let x = leftPadding + (i / Math.max(1, data.length - 1)) * chartWidth;
+          if (index === 0) {
+            x += 8;
+          } else if (index === dateIndices.length - 1) {
+            x -= gapBetweenChartAndPrices;
+          }
+
+          let dateStr;
+          if (days === '1') {
+            dateStr = data[i].date.toLocaleTimeString('pl-PL', {
+              hour: '2-digit',
+              minute: '2-digit'
+            });
+          } else {
+            dateStr = data[i].date.toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric'
+            });
+          }
+          ctx.fillText(dateStr, x, height - bottomPadding + 15);
+        }
+      });
+
+      // Draw line chart
+      const strokeWeight = parseFloat(document.getElementById('strokeWeight').value) || 1;
+      ctx.strokeStyle = lineColor;
+      ctx.lineWidth = strokeWeight * 2; // Line charts look better with thicker lines
+      ctx.lineJoin = 'round';
+      ctx.lineCap = 'round';
+
+      ctx.beginPath();
+      data.forEach((point, i) => {
+        const x = leftPadding + (i / Math.max(1, data.length - 1)) * chartWidth;
+        const y = topPadding + ((maxPrice - point.close) / adjustedRange) * chartHeight;
+
+        if (i === 0) {
+          ctx.moveTo(x, y);
+        } else {
+          ctx.lineTo(x, y);
+        }
+      });
+      ctx.stroke();
+
+      // Optionally fill area under line with gradient
+      if (document.getElementById('showVolume').checked) {
+        const gradient = ctx.createLinearGradient(0, topPadding, 0, height - bottomPadding);
+        const rgb = hexToRgb(lineColor);
+        gradient.addColorStop(0, `rgba(${rgb.r * 255}, ${rgb.g * 255}, ${rgb.b * 255}, 0.3)`);
+        gradient.addColorStop(1, `rgba(${rgb.r * 255}, ${rgb.g * 255}, ${rgb.b * 255}, 0.0)`);
+
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        data.forEach((point, i) => {
+          const x = leftPadding + (i / Math.max(1, data.length - 1)) * chartWidth;
+          const y = topPadding + ((maxPrice - point.close) / adjustedRange) * chartHeight;
+          if (i === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        });
+        ctx.lineTo(leftPadding + chartWidth, height - bottomPadding);
+        ctx.lineTo(leftPadding, height - bottomPadding);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Store data for updates
+      window.currentCanvasData = data;
+      window.currentChartType = 'line';
+    }
+
+    function hexToRgb(hex) {
+      const bigint = parseInt(hex.slice(1), 16);
+      return {
+        r: ((bigint >> 16) & 255) / 255,
+        g: ((bigint >> 8) & 255) / 255,
+        b: (bigint & 255) / 255
+      };
+    }
+
     function updateIntervalOptions(days) {
       const intervalSelect = document.getElementById('interval');
       const currentInterval = intervalSelect.value;
-      
+
+      // Capital.com API-validated interval mappings
+      // Based on actual API data availability testing
       const validIntervals = {
         "1": [
-          { value: "5m", label: "5 minutes" },
-          { value: "15m", label: "15 minutes" },
-          { value: "30m", label: "30 minutes" },
-          { value: "60m", label: "1 hour" }
+          // 1 Day - API supports 5min+ for intraday
+          { value: "MINUTE_5", label: "5 minutes", default: true },
+          { value: "MINUTE_15", label: "15 minutes" },
+          { value: "MINUTE_30", label: "30 minutes" }
         ],
         "5": [
-          { value: "15m", label: "15 minutes" },
-          { value: "30m", label: "30 minutes" },
-          { value: "60m", label: "1 hour" },
-          { value: "1d", label: "1 day" }
+          // 5 Days - API supports 15min+ reliably
+          { value: "MINUTE_15", label: "15 minutes", default: true },
+          { value: "MINUTE_30", label: "30 minutes" },
+          { value: "HOUR", label: "1 hour" }
         ],
         "30": [
-          { value: "60m", label: "1 hour" },
-          { value: "1d", label: "1 day" },
-          { value: "1wk", label: "1 week" }
+          // 1 Month - API supports hourly+
+          { value: "HOUR", label: "1 hour" },
+          { value: "HOUR_4", label: "4 hours", default: true },
+          { value: "DAY", label: "1 day" }
         ],
         "90": [
-          { value: "1d", label: "1 day" },
-          { value: "1wk", label: "1 week" }
+          // 3 Months - Use 4h or daily
+          { value: "HOUR_4", label: "4 hours" },
+          { value: "DAY", label: "1 day", default: true }
         ],
         "180": [
-          { value: "1d", label: "1 day" },
-          { value: "1wk", label: "1 week" }
+          // 6 Months - Daily recommended
+          { value: "HOUR_4", label: "4 hours" },
+          { value: "DAY", label: "1 day", default: true },
+          { value: "WEEK", label: "1 week" }
         ],
         "365": [
-          { value: "1d", label: "1 day" },
-          { value: "1wk", label: "1 week" },
-          { value: "1mo", label: "1 month" }
+          // 1 Year - Daily or weekly
+          { value: "DAY", label: "1 day", default: true },
+          { value: "WEEK", label: "1 week" }
         ],
         "ytd": [
-          { value: "1d", label: "1 day" },
-          { value: "1wk", label: "1 week" },
-          { value: "1mo", label: "1 month" }
+          // Year to Date
+          { value: "DAY", label: "1 day", default: true },
+          { value: "WEEK", label: "1 week" }
         ],
         "1825": [
-          { value: "1wk", label: "1 week" },
-          { value: "1mo", label: "1 month" }
+          // 5 Years - Weekly recommended for performance
+          { value: "DAY", label: "1 day" },
+          { value: "WEEK", label: "1 week", default: true }
         ],
         "max": [
-          { value: "1wk", label: "1 week" },
-          { value: "1mo", label: "1 month" }
+          // All time
+          { value: "WEEK", label: "1 week", default: true }
         ],
         "custom": [
-          { value: "1d", label: "1 day" },
-          { value: "1wk", label: "1 week" },
-          { value: "1mo", label: "1 month" }
+          // Custom range - offer all validated intervals
+          { value: "MINUTE_5", label: "5 minutes" },
+          { value: "MINUTE_15", label: "15 minutes" },
+          { value: "MINUTE_30", label: "30 minutes" },
+          { value: "HOUR", label: "1 hour" },
+          { value: "HOUR_4", label: "4 hours" },
+          { value: "DAY", label: "1 day", default: true },
+          { value: "WEEK", label: "1 week" }
         ]
       };
 
@@ -921,18 +1065,14 @@
         intervalSelect.appendChild(option);
       });
 
+      // Smart default selection
       if (intervals.some(i => i.value === currentInterval)) {
+        // Keep current selection if valid
         intervalSelect.value = currentInterval;
       } else {
-        if (days === "1") {
-          intervalSelect.value = "30m";
-        } else if (days === "5") {
-          intervalSelect.value = "60m";
-        } else if (days === "1825" || days === "max") {
-          intervalSelect.value = "1wk";
-        } else {
-          intervalSelect.value = "1d";
-        }
+        // Use marked default or first option
+        const defaultInterval = intervals.find(i => i.default) || intervals[0];
+        intervalSelect.value = defaultInterval.value;
       }
     }
 
@@ -952,13 +1092,22 @@
           start = Math.floor(new Date(startDate).getTime() / 1000);
           const end = Math.floor(new Date(endDate).getTime() / 1000);
           
-          const url = 'https://sharescomcharts.petebaran.workers.dev/?symbol=' + symbol + '&interval=' + interval + '&start=' + start + '&end=' + end;
+          const from = new Date(startDate).toISOString();
+          const to = new Date(endDate).toISOString();
+          const url = 'https://capitalcom-charts-proxy.petebaranescu.workers.dev/chart?epic=' + symbol + '&resolution=' + interval + '&from=' + from + '&to=' + to;
           
           document.getElementById('chart').innerHTML = '<div class="loading">Loading custom date range...</div>';
           
           fetch(url)
-            .then(res => res.json())
+            .then(res => {
+              console.log('Custom range response status:', res.status);
+              if (!res.ok) {
+                throw new Error('HTTP error! status: ' + res.status);
+              }
+              return res.json();
+            })
             .then(json => {
+              console.log('Custom range received data:', json);
               const result = json.chart.result[0];
               window.chartData = result;
               renderPreview(result);
@@ -982,17 +1131,34 @@
         start = now - days * 24 * 60 * 60;
       }
 
-      const url = 'https://sharescomcharts.petebaran.workers.dev/?symbol=' + symbol + '&interval=' + interval + (start ? '&start=' + start + '&end=' + now : '');
+      // Convert timestamps to ISO date strings for Capital.com API
+      const fromDate = start ? new Date(start * 1000).toISOString() : '';
+      const toDate = new Date(now * 1000).toISOString();
+      const url = 'https://capitalcom-charts-proxy.petebaranescu.workers.dev/chart?epic=' + symbol + '&resolution=' + interval + (fromDate ? '&from=' + fromDate + '&to=' + toDate : '');
 
       document.getElementById('chart').innerHTML = '<div class="loading">Loading chart data...</div>';
 
+      console.log('Fetching URL:', url);
       fetch(url)
-        .then(res => res.json())
+        .then(res => {
+          console.log('Response status:', res.status);
+          if (!res.ok) {
+            return res.text().then(text => {
+              console.error('Error response body:', text);
+              throw new Error('HTTP error! status: ' + res.status + ' - ' + text.substring(0, 200));
+            });
+          }
+          return res.json();
+        })
         .then(json => {
+          console.log('Received data:', json);
+          if (!json.chart || !json.chart.result || !json.chart.result[0]) {
+            throw new Error('Invalid data format received');
+          }
           const result = json.chart.result[0];
           
           // Filter weekends for daily+ intervals
-          if (interval === '1d' || interval === '1wk' || interval === '1mo') {
+          if (interval === 'DAY' || interval === 'WEEK') {
             const filteredTimestamps = [];
             const filteredOpen = [];
             const filteredHigh = [];
@@ -1092,7 +1258,8 @@
         const interval = document.getElementById('interval').value;
         const useCustomRange = document.getElementById('useCustomRange').checked;
         const strokeWeight = parseFloat(document.getElementById('strokeWeight').value) || 1;
-        
+        const chartType = document.getElementById('chartType').value;
+
         let timeframe;
         if (useCustomRange) {
           const startDate = document.getElementById('startDate').value;
@@ -1102,13 +1269,14 @@
           const activeBtn = document.querySelector('.timeframes button.active');
           timeframe = activeBtn ? activeBtn.dataset.days : "30";
         }
-        
-        parent.postMessage({ 
-          pluginMessage: { 
-            type: 'chart-data', 
+
+        parent.postMessage({
+          pluginMessage: {
+            type: 'chart-data',
             data: window.chartData,
             interval: interval,
             timeframe: timeframe,
+            chartType: chartType,
             config: {
               width: width,
               height: height,
@@ -1118,9 +1286,10 @@
               showDateGrid: document.getElementById('showDateGrid').checked,
               showVolume: document.getElementById('showVolume').checked,
               transparentBackground: document.getElementById('transparentBackground').checked,
-              strokeWeight: strokeWeight
+              strokeWeight: strokeWeight,
+              chartType: chartType
             }
-          } 
+          }
         }, '*');
       } else {
         alert('No chart data available. Please wait for data to load.');
@@ -1201,29 +1370,61 @@
       fetchChart('custom', currentSymbol);
     });
 
+    // Chart type change listener
+    document.getElementById('chartType').addEventListener('change', function() {
+      if (window.currentCanvasData) {
+        const chartType = document.getElementById('chartType').value;
+        if (chartType === 'line') {
+          drawLineChart(window.currentCanvasData);
+        } else {
+          drawCandlestickChart(window.currentCanvasData);
+        }
+      }
+    });
+
     // Color change listeners to update preview
     document.getElementById('bullColor').addEventListener('change', function() {
       if (window.currentCanvasData) {
-        drawCandlestickChart(window.currentCanvasData);
+        const chartType = document.getElementById('chartType').value;
+        if (chartType === 'line') {
+          drawLineChart(window.currentCanvasData);
+        } else {
+          drawCandlestickChart(window.currentCanvasData);
+        }
       }
     });
 
     document.getElementById('bearColor').addEventListener('change', function() {
       if (window.currentCanvasData) {
-        drawCandlestickChart(window.currentCanvasData);
+        const chartType = document.getElementById('chartType').value;
+        if (chartType === 'line') {
+          drawLineChart(window.currentCanvasData);
+        } else {
+          drawCandlestickChart(window.currentCanvasData);
+        }
       }
     });
 
     // Grid change listeners
     document.getElementById('showPriceGrid').addEventListener('change', function() {
       if (window.currentCanvasData) {
-        drawCandlestickChart(window.currentCanvasData);
+        const chartType = document.getElementById('chartType').value;
+        if (chartType === 'line') {
+          drawLineChart(window.currentCanvasData);
+        } else {
+          drawCandlestickChart(window.currentCanvasData);
+        }
       }
     });
 
     document.getElementById('showDateGrid').addEventListener('change', function() {
       if (window.currentCanvasData) {
-        drawCandlestickChart(window.currentCanvasData);
+        const chartType = document.getElementById('chartType').value;
+        if (chartType === 'line') {
+          drawLineChart(window.currentCanvasData);
+        } else {
+          drawCandlestickChart(window.currentCanvasData);
+        }
       }
     });
 

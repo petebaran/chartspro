@@ -1,0 +1,4 @@
+name = "capitalcom-charts-proxy"
+main = "worker.js"
+compatibility_date = "2024-10-14"
+workers_dev = true

@@ -8,7 +8,7 @@
   "documentAccess": "dynamic-page",
   "networkAccess": {
     "allowedDomains": [
-      "https://sharescomcharts.petebaran.workers.dev"
+      "https://capitalcom-charts-proxy.petebaranescu.workers.dev"
     ]
   }
 }
