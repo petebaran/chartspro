@@ -15,6 +15,19 @@ let sessionCache = {
   expiresAt: 0
 };
 
+const RESOLUTION_FALLBACKS = {
+  'MINUTE': ['MINUTE_5', 'MINUTE_15', 'MINUTE_30', 'HOUR', 'HOUR_4', 'DAY', 'WEEK'],
+  'MINUTE_5': ['MINUTE_15', 'MINUTE_30', 'HOUR', 'HOUR_4', 'DAY', 'WEEK'],
+  'MINUTE_15': ['MINUTE_30', 'HOUR', 'HOUR_4', 'DAY', 'WEEK'],
+  'MINUTE_30': ['HOUR', 'HOUR_4', 'DAY', 'WEEK'],
+  'HOUR': ['HOUR_4', 'DAY', 'WEEK'],
+  'HOUR_4': ['DAY', 'WEEK'],
+  'DAY': ['WEEK'],
+  'WEEK': []
+};
+
+const DEFAULT_FALLBACK_CHAIN = ['DAY', 'WEEK'];
+
 async function createSession() {
   try {
     // Create session with simple password authentication
@@ -68,13 +81,10 @@ async function getValidSession() {
   return await createSession();
 }
 
-async function fetchMarketData(epic, resolution, from, to) {
-  const session = await getValidSession();
-
-  const url = new URL(`${CAPITAL_API_BASE}/api/v1/prices/${epic}`);
+function buildPricesUrl(epic, resolution, from, to) {
+  const url = new URL(`${CAPITAL_API_BASE}/api/v1/prices/${encodeURIComponent(epic)}`);
   url.searchParams.append('resolution', resolution);
 
-  // Convert ISO dates to Capital.com format (YYYY-MM-DDTHH:mm:ss without milliseconds)
   if (from) {
     const cleanFrom = from.replace(/\.\d{3}Z$/, '');
     url.searchParams.append('from', cleanFrom);
@@ -85,7 +95,56 @@ async function fetchMarketData(epic, resolution, from, to) {
   }
 
   url.searchParams.append('max', '1000');
+  return url;
+}
 
+function normalizeString(value) {
+  return value ? value.replace(/[^a-z0-9]/gi, '').toLowerCase() : '';
+}
+
+function summarizeErrorText(text) {
+  if (!text) return '';
+  try {
+    const parsed = JSON.parse(text);
+    if (parsed && typeof parsed === 'object') {
+      if (parsed.errorCode) return String(parsed.errorCode);
+      if (parsed.message) return String(parsed.message);
+      return JSON.stringify(parsed).slice(0, 180);
+    }
+  } catch (err) {
+    // Ignore JSON parse errors and fall back to the raw text
+  }
+  return text.length > 180 ? `${text.slice(0, 177)}...` : text;
+}
+
+function getFallbackResolutions(resolution) {
+  if (RESOLUTION_FALLBACKS[resolution]) {
+    return RESOLUTION_FALLBACKS[resolution];
+  }
+  return DEFAULT_FALLBACK_CHAIN;
+}
+
+function shouldAttemptFallback(status, errorText) {
+  if (status === 401 || status === 403) return false;
+  if (status >= 500) return false;
+  if (status === 404 || status === 422) return true;
+  if (status === 400) {
+    if (!errorText) return true;
+    const lower = errorText.toLowerCase();
+    const triggerPhrases = [
+      'no price data',
+      'no data available',
+      'validation.max',
+      'validation.min',
+      'not available for the requested resolution'
+    ];
+    return triggerPhrases.some(phrase => lower.includes(phrase));
+  }
+  return false;
+}
+
+async function executePriceRequest(epic, resolution, from, to, session) {
+  const url = buildPricesUrl(epic, resolution, from, to);
   const response = await fetch(url.toString(), {
     method: 'GET',
     headers: {
@@ -96,16 +155,130 @@ async function fetchMarketData(epic, resolution, from, to) {
     }
   });
 
+  let errorText = '';
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Market data request failed: ${response.status} - ${errorText}`);
+    try {
+      errorText = await response.text();
+    } catch (err) {
+      errorText = '';
+    }
   }
 
-  return await response.json();
+  return { response, errorText };
 }
 
-async function searchMarkets(searchTerm) {
+async function resolveEpicCandidate(searchTerm, session) {
+  try {
+    // Try multiple search terms for better matching
+    const searchTerms = [
+      searchTerm,
+      searchTerm.replace(/[^a-zA-Z0-9]/g, ''), // Remove special characters
+      searchTerm.replace(/[^a-zA-Z0-9]/g, '').toLowerCase(), // Lowercase version
+    ];
+
+    // Add common variations for VIX
+    if (searchTerm.toUpperCase().includes('VIX') || searchTerm.toUpperCase().includes('VOLATILITY')) {
+      searchTerms.push('VIX', 'VIX.XO', 'VOLATILITY', 'CBOE VIX');
+    }
+
+    for (const term of searchTerms) {
+      if (!term) continue;
+      
+      const searchResult = await searchMarkets(term, session);
+      if (!searchResult) continue;
+
+      const markets = Array.isArray(searchResult.markets) ? searchResult.markets : [];
+      if (!markets.length) continue;
+
+      const lowerSearch = term.toLowerCase();
+      const normalizedSearch = normalizeString(term);
+
+      const byEpic = markets.find(market => market.epic && market.epic.toLowerCase() === lowerSearch);
+      if (byEpic) return byEpic.epic;
+
+      const byNormalizedEpic = markets.find(market => normalizeString(market.epic) === normalizedSearch);
+      if (byNormalizedEpic) return byNormalizedEpic.epic;
+
+      const byMarketId = markets.find(market => normalizeString(market.marketId) === normalizedSearch);
+      if (byMarketId) return byMarketId.epic;
+
+      const byInstrumentName = markets.find(market => normalizeString(market.instrumentName) === normalizedSearch);
+      if (byInstrumentName) return byInstrumentName.epic;
+
+      const partialNameMatch = markets.find(market =>
+        market.instrumentName && market.instrumentName.toLowerCase().includes(lowerSearch)
+      );
+      if (partialNameMatch) return partialNameMatch.epic;
+
+      // If we found markets but no exact match, return the first one
+      if (markets.length > 0) return markets[0].epic;
+    }
+
+    return null;
+  } catch (error) {
+    console.warn('Failed to resolve epic via searchMarkets:', error);
+    return null;
+  }
+}
+
+async function fetchMarketData(epic, resolution, from, to) {
   const session = await getValidSession();
+  const attemptedResolutions = new Set();
+  const attemptedEpics = new Set();
+
+  async function fetchWithFallback(currentEpic, currentResolution) {
+    const { response, errorText } = await executePriceRequest(currentEpic, currentResolution, from, to, session);
+
+    if (response.ok) {
+      const json = await response.json();
+      return {
+        data: json,
+        usedResolution: currentResolution,
+        usedEpic: currentEpic,
+        requestedEpic: epic
+      };
+    }
+
+    const status = response.status;
+    const canFallback = shouldAttemptFallback(status, errorText);
+
+    if (canFallback) {
+      attemptedResolutions.add(currentResolution);
+      const fallbacks = getFallbackResolutions(currentResolution);
+      for (const fallback of fallbacks) {
+        if (attemptedResolutions.has(fallback)) {
+          continue;
+        }
+        try {
+          return await fetchWithFallback(currentEpic, fallback);
+        } catch (fallbackError) {
+          console.warn(`Fallback resolution ${fallback} failed for ${currentEpic}:`, fallbackError);
+        }
+      }
+    }
+
+    if ((status === 400 || status === 404) && !attemptedEpics.has(currentEpic)) {
+      attemptedEpics.add(currentEpic);
+      console.log(`Attempting to resolve epic for: ${currentEpic}`);
+      const alternativeEpic = await resolveEpicCandidate(currentEpic, session);
+      if (alternativeEpic && !attemptedEpics.has(alternativeEpic)) {
+        console.log(`Found alternative epic: ${alternativeEpic} for ${currentEpic}`);
+        attemptedResolutions.clear();
+        return await fetchWithFallback(alternativeEpic, resolution);
+      } else {
+        console.log(`No alternative epic found for: ${currentEpic}`);
+      }
+    }
+
+    const summary = summarizeErrorText(errorText);
+    throw new Error(`Market data request failed (${status}) for ${currentEpic} @ ${currentResolution}${summary ? ` - ${summary}` : ''}`);
+  }
+
+  return await fetchWithFallback(epic, resolution);
+}
+
+async function searchMarkets(searchTerm, existingSession) {
+  const session = existingSession || await getValidSession();
 
   const url = new URL(`${CAPITAL_API_BASE}/api/v1/markets`);
   if (searchTerm) {
@@ -123,14 +296,15 @@ async function searchMarkets(searchTerm) {
   });
 
   if (!response.ok) {
-    throw new Error(`Markets search failed: ${response.status}`);
+    const errorText = await response.text().catch(() => '');
+    throw new Error(`Markets search failed: ${response.status}${errorText ? ` - ${errorText}` : ''}`);
   }
 
   return await response.json();
 }
 
 // Convert Capital.com data format to Yahoo Finance-compatible format
-function convertToYahooFormat(capitalData, epic) {
+function convertToYahooFormat(capitalData, epic, resolution, requestedEpic) {
   const timestamps = [];
   const opens = [];
   const highs = [];
@@ -156,6 +330,8 @@ function convertToYahooFormat(capitalData, epic) {
       result: [{
         meta: {
           symbol: epic,
+          requestedSymbol: requestedEpic || epic,
+          resolution: resolution || null,
           currency: 'USD',
           exchangeName: 'Capital.com'
         },
@@ -205,8 +381,13 @@ export default {
           });
         }
 
-        const capitalData = await fetchMarketData(epic, resolution, from, to);
-        const yahooFormat = convertToYahooFormat(capitalData, epic);
+        const marketData = await fetchMarketData(epic, resolution, from, to);
+        const yahooFormat = convertToYahooFormat(
+          marketData.data,
+          marketData.usedEpic,
+          marketData.usedResolution,
+          marketData.requestedEpic
+        );
 
         return new Response(JSON.stringify(yahooFormat), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
