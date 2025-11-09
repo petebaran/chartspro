@@ -1,11 +1,9 @@
 // Capital.com API Proxy for CC Charts Pro Figma Plugin
 // Handles session management and proxies requests to Capital.com API
 
-// Using DEMO API - switch to live API when ready
-const CAPITAL_API_BASE = 'https://demo-api-capital.backend-capital.com';
-const API_KEY = 'sP6oTAnyrvt6lHjl';
-const IDENTIFIER = 'petebaran@proton.me'; // Your Capital.com login email - UPDATE THIS!
-const PASSWORD = 'wtp7fhz2epd@RWY.qzm';
+// Environment variables are configured in wrangler.toml and via wrangler secrets
+// Non-sensitive: CAPITAL_API_BASE (from wrangler.toml [vars])
+// Secrets: CAPITAL_API_KEY, CAPITAL_IDENTIFIER, CAPITAL_PASSWORD (set via wrangler secret put)
 
 // Session cache with timestamp
 let sessionCache = {
@@ -28,18 +26,18 @@ const RESOLUTION_FALLBACKS = {
 
 const DEFAULT_FALLBACK_CHAIN = ['DAY', 'WEEK'];
 
-async function createSession() {
+async function createSession(env) {
   try {
     // Create session with simple password authentication
-    const sessionResponse = await fetch(`${CAPITAL_API_BASE}/api/v1/session`, {
+    const sessionResponse = await fetch(`${env.CAPITAL_API_BASE}/api/v1/session`, {
       method: 'POST',
       headers: {
-        'X-CAP-API-KEY': API_KEY,
+        'X-CAP-API-KEY': env.CAPITAL_API_KEY,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        identifier: IDENTIFIER,
-        password: PASSWORD,
+        identifier: env.CAPITAL_IDENTIFIER,
+        password: env.CAPITAL_PASSWORD,
         encryptedPassword: false
       })
     });
@@ -71,18 +69,18 @@ async function createSession() {
   }
 }
 
-async function getValidSession() {
+async function getValidSession(env) {
   // Check if we have a valid cached session
   if (sessionCache.cst && sessionCache.expiresAt > Date.now()) {
     return sessionCache;
   }
 
   // Create new session
-  return await createSession();
+  return await createSession(env);
 }
 
-function buildPricesUrl(epic, resolution, from, to) {
-  const url = new URL(`${CAPITAL_API_BASE}/api/v1/prices/${encodeURIComponent(epic)}`);
+function buildPricesUrl(env, epic, resolution, from, to) {
+  const url = new URL(`${env.CAPITAL_API_BASE}/api/v1/prices/${encodeURIComponent(epic)}`);
   url.searchParams.append('resolution', resolution);
 
   if (from) {
@@ -143,12 +141,12 @@ function shouldAttemptFallback(status, errorText) {
   return false;
 }
 
-async function executePriceRequest(epic, resolution, from, to, session) {
-  const url = buildPricesUrl(epic, resolution, from, to);
+async function executePriceRequest(env, epic, resolution, from, to, session) {
+  const url = buildPricesUrl(env, epic, resolution, from, to);
   const response = await fetch(url.toString(), {
     method: 'GET',
     headers: {
-      'X-CAP-API-KEY': API_KEY,
+      'X-CAP-API-KEY': env.CAPITAL_API_KEY,
       'CST': session.cst,
       'X-SECURITY-TOKEN': session.securityToken,
       'Content-Type': 'application/json'
@@ -167,7 +165,7 @@ async function executePriceRequest(epic, resolution, from, to, session) {
   return { response, errorText };
 }
 
-async function resolveEpicCandidate(searchTerm, session) {
+async function resolveEpicCandidate(env, searchTerm, session) {
   try {
     // Try multiple search terms for better matching
     const searchTerms = [
@@ -183,8 +181,8 @@ async function resolveEpicCandidate(searchTerm, session) {
 
     for (const term of searchTerms) {
       if (!term) continue;
-      
-      const searchResult = await searchMarkets(term, session);
+
+      const searchResult = await searchMarkets(env, term, session);
       if (!searchResult) continue;
 
       const markets = Array.isArray(searchResult.markets) ? searchResult.markets : [];
@@ -221,13 +219,13 @@ async function resolveEpicCandidate(searchTerm, session) {
   }
 }
 
-async function fetchMarketData(epic, resolution, from, to) {
-  const session = await getValidSession();
+async function fetchMarketData(env, epic, resolution, from, to) {
+  const session = await getValidSession(env);
   const attemptedResolutions = new Set();
   const attemptedEpics = new Set();
 
   async function fetchWithFallback(currentEpic, currentResolution) {
-    const { response, errorText } = await executePriceRequest(currentEpic, currentResolution, from, to, session);
+    const { response, errorText } = await executePriceRequest(env, currentEpic, currentResolution, from, to, session);
 
     if (response.ok) {
       const json = await response.json();
@@ -260,7 +258,7 @@ async function fetchMarketData(epic, resolution, from, to) {
     if ((status === 400 || status === 404) && !attemptedEpics.has(currentEpic)) {
       attemptedEpics.add(currentEpic);
       console.log(`Attempting to resolve epic for: ${currentEpic}`);
-      const alternativeEpic = await resolveEpicCandidate(currentEpic, session);
+      const alternativeEpic = await resolveEpicCandidate(env, currentEpic, session);
       if (alternativeEpic && !attemptedEpics.has(alternativeEpic)) {
         console.log(`Found alternative epic: ${alternativeEpic} for ${currentEpic}`);
         attemptedResolutions.clear();
@@ -277,10 +275,10 @@ async function fetchMarketData(epic, resolution, from, to) {
   return await fetchWithFallback(epic, resolution);
 }
 
-async function searchMarkets(searchTerm, existingSession) {
-  const session = existingSession || await getValidSession();
+async function searchMarkets(env, searchTerm, existingSession) {
+  const session = existingSession || await getValidSession(env);
 
-  const url = new URL(`${CAPITAL_API_BASE}/api/v1/markets`);
+  const url = new URL(`${env.CAPITAL_API_BASE}/api/v1/markets`);
   if (searchTerm) {
     url.searchParams.append('searchTerm', searchTerm);
   }
@@ -288,7 +286,7 @@ async function searchMarkets(searchTerm, existingSession) {
   const response = await fetch(url.toString(), {
     method: 'GET',
     headers: {
-      'X-CAP-API-KEY': API_KEY,
+      'X-CAP-API-KEY': env.CAPITAL_API_KEY,
       'CST': session.cst,
       'X-SECURITY-TOKEN': session.securityToken,
       'Content-Type': 'application/json'
@@ -381,7 +379,7 @@ export default {
           });
         }
 
-        const marketData = await fetchMarketData(epic, resolution, from, to);
+        const marketData = await fetchMarketData(env, epic, resolution, from, to);
         const yahooFormat = convertToYahooFormat(
           marketData.data,
           marketData.usedEpic,
@@ -397,7 +395,7 @@ export default {
       // Search endpoint: /search?term=AAPL
       if (url.pathname === '/search') {
         const term = url.searchParams.get('term');
-        const markets = await searchMarkets(term);
+        const markets = await searchMarkets(env, term);
 
         return new Response(JSON.stringify(markets), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }

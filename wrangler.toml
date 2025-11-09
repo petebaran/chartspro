@@ -2,3 +2,14 @@ name = "capitalcom-charts-proxy"
 main = "worker.js"
 compatibility_date = "2024-10-14"
 workers_dev = true
+
+# Environment Variables (non-sensitive configuration)
+[vars]
+CAPITAL_API_BASE = "https://demo-api-capital.backend-capital.com"
+
+# Secrets (sensitive credentials)
+# Set these using: wrangler secret put <KEY>
+# Required secrets:
+#   - CAPITAL_API_KEY
+#   - CAPITAL_IDENTIFIER
+#   - CAPITAL_PASSWORD

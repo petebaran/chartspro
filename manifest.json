@@ -8,7 +8,9 @@
   "documentAccess": "dynamic-page",
   "networkAccess": {
     "allowedDomains": [
-      "https://capitalcom-charts-proxy.petebaranescu.workers.dev"
+      "https://capitalcom-charts-proxy.petebaranescu.workers.dev",
+      "https://fonts.googleapis.com",
+      "https://fonts.gstatic.com"
     ]
   }
 }
