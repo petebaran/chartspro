@@ -23,42 +23,46 @@ This plugin has been migrated from Yahoo Finance API to Capital.com's official A
 
 ## Deployment
 
-### 1. Deploy the Cloudflare Worker Proxy
+### 1. Configure Environment Variables
+
+The worker requires Capital.com API credentials to be configured as Cloudflare Worker secrets.
+
+**Important:** Never commit credentials to the repository. All sensitive data is managed through Wrangler secrets.
+
+```bash
+# Set required secrets (you'll be prompted to enter the values)
+wrangler secret put CAPITAL_API_KEY
+wrangler secret put CAPITAL_IDENTIFIER
+wrangler secret put CAPITAL_PASSWORD
+```
+
+The `CAPITAL_API_BASE` URL is configured in `wrangler.toml` and can be changed between demo and live API:
+- Demo: `https://demo-api-capital.backend-capital.com`
+- Live: `https://api-capital.backend-capital.com`
+
+### 2. Deploy the Cloudflare Worker Proxy
 
 The proxy handles authentication and CORS for the Capital.com API.
 
 ```bash
-cd /Users/piotrbaran/Work/Resources/Figma/Plugins/Charts/chartspro
-
 # Install Wrangler CLI if you haven't already
 npm install -g wrangler
 
 # Login to Cloudflare
 wrangler login
 
-# Deploy the worker
+# Deploy the worker (after setting secrets)
 wrangler deploy
 ```
 
 The worker will be deployed to: `https://capitalcom-charts-proxy.petebaran.workers.dev`
 
-### 2. Update Plugin in Figma
+### 3. Update Plugin in Figma
 
 1. Open Figma Desktop App
 2. Go to **Plugins** > **Development** > **Import plugin from manifest...**
 3. Select the `manifest.json` file from this directory
 4. The plugin is now ready to use!
-
-## API Credentials
-
-The following credentials are hardcoded in `worker.js` (for organization-only use):
-
-```
-API Key: sP6oTAnyrvt6lHjl
-Password: wtp7fhz2epd@RWY.qzm
-```
-
-**Note**: These credentials should only be used within your Figma organization. For production use, consider using environment variables.
 
 ## Architecture
 
@@ -135,16 +139,26 @@ chartspro/
 
 To test the worker locally:
 
-```bash
-wrangler dev
-```
+1. **Set up local environment** (optional for local dev):
+   ```bash
+   # Create a .env file from the example
+   cp .env.example .env
+   # Edit .env and add your Capital.com credentials
+   ```
 
-This will start a local server at `http://localhost:8787`
+2. **Start local development server**:
+   ```bash
+   wrangler dev
+   ```
 
-Update the API URL in `ui.html` for testing:
-```javascript
-const url = 'http://localhost:8787/chart?epic=' + symbol + '&resolution=' + interval + ...
-```
+   This will start a local server at `http://localhost:8787`
+
+   **Note:** For local development, you'll still need to have the secrets set via `wrangler secret put` or use the `.dev.vars` file (see [Cloudflare documentation](https://developers.cloudflare.com/workers/configuration/secrets/#secrets-in-development))
+
+3. **Update the API URL in `ui.html` for testing**:
+   ```javascript
+   const url = 'http://localhost:8787/chart?epic=' + symbol + '&resolution=' + interval + ...
+   ```
 
 ## Troubleshooting
 
