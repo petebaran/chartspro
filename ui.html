@@ -271,7 +271,91 @@
     }
 
     .custom-range-section {
-      background: #fff8dc;
+      background: #ffffff;
+    }
+
+    /* Chart Type Tabs */
+    .chart-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .chart-tab {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 20px;
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      color: #4a5568;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+      top: 2px;
+    }
+
+    .chart-tab:hover {
+      color: #C78D3A;
+      background: #f7fafc;
+    }
+
+    .chart-tab.active {
+      color: #C78D3A;
+      border-bottom-color: #C78D3A;
+    }
+
+    .chart-tab-icon {
+      width: 16px;
+      height: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Interval Radio Buttons */
+    .interval-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .interval-option {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .interval-option:hover {
+      background: #f7fafc;
+      border-color: #cbd5e0;
+    }
+
+    .interval-option input[type="radio"] {
+      margin: 0 8px 0 0;
+      width: auto;
+      cursor: pointer;
+    }
+
+    .interval-option label {
+      margin: 0;
+      font-size: 12px;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    .interval-option input[type="radio"]:checked + label {
+      color: #C78D3A;
+      font-weight: 600;
     }
   </style>
 </head>
@@ -279,7 +363,31 @@
   <div class="container">
     <div class="content">
       <div class="section">
-        <h3 class="section-title">Preview</h3>
+        <div class="chart-tabs">
+          <button class="chart-tab active" data-chart-type="candles">
+            <span class="chart-tab-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="3" y="2" width="2" height="12" fill="currentColor"/>
+                <rect x="2" y="5" width="4" height="6" fill="currentColor" opacity="0.5"/>
+                <rect x="11" y="4" width="2" height="8" fill="currentColor"/>
+                <rect x="10" y="6" width="4" height="4" fill="currentColor" opacity="0.5"/>
+              </svg>
+            </span>
+            Candlestick
+          </button>
+          <button class="chart-tab" data-chart-type="line">
+            <span class="chart-tab-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M2 12L5 8L8 10L14 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle cx="2" cy="12" r="1.5" fill="currentColor"/>
+                <circle cx="5" cy="8" r="1.5" fill="currentColor"/>
+                <circle cx="8" cy="10" r="1.5" fill="currentColor"/>
+                <circle cx="14" cy="4" r="1.5" fill="currentColor"/>
+              </svg>
+            </span>
+            Line
+          </button>
+        </div>
         <div id="chart"></div>
         <div class="timeframes">
           <button data-days="1">1D</button>
@@ -296,26 +404,43 @@
 
       <div class="section">
         <h3 class="section-title">Data Selection</h3>
-        <div class="form-group">
-          <label for="chartType">Chart Type:</label>
-          <select id="chartType">
-            <option value="candles">Candlestick Chart</option>
-            <option value="line">Line Chart</option>
-          </select>
-        </div>
 
         <div class="form-group">
-          <label for="interval">Interval:</label>
-          <select id="interval">
-            <option value="MINUTE">1 minute</option>
-            <option value="MINUTE_5">5 minutes</option>
-            <option value="MINUTE_15">15 minutes</option>
-            <option value="MINUTE_30">30 minutes</option>
-            <option value="HOUR">1 hour</option>
-            <option value="HOUR_4">4 hours</option>
-            <option value="DAY">1 day</option>
-            <option value="WEEK">1 week</option>
-          </select>
+          <label>Interval:</label>
+          <div class="interval-group" id="intervalGroup">
+            <div class="interval-option">
+              <input type="radio" id="interval-minute" name="interval" value="MINUTE">
+              <label for="interval-minute">1 minute</label>
+            </div>
+            <div class="interval-option">
+              <input type="radio" id="interval-5min" name="interval" value="MINUTE_5">
+              <label for="interval-5min">5 minutes</label>
+            </div>
+            <div class="interval-option">
+              <input type="radio" id="interval-15min" name="interval" value="MINUTE_15">
+              <label for="interval-15min">15 minutes</label>
+            </div>
+            <div class="interval-option">
+              <input type="radio" id="interval-30min" name="interval" value="MINUTE_30">
+              <label for="interval-30min">30 minutes</label>
+            </div>
+            <div class="interval-option">
+              <input type="radio" id="interval-1h" name="interval" value="HOUR">
+              <label for="interval-1h">1 hour</label>
+            </div>
+            <div class="interval-option">
+              <input type="radio" id="interval-4h" name="interval" value="HOUR_4">
+              <label for="interval-4h">4 hours</label>
+            </div>
+            <div class="interval-option">
+              <input type="radio" id="interval-day" name="interval" value="DAY">
+              <label for="interval-day">1 day</label>
+            </div>
+            <div class="interval-option">
+              <input type="radio" id="interval-week" name="interval" value="WEEK">
+              <label for="interval-week">1 week</label>
+            </div>
+          </div>
         </div>
 
         <div class="form-group">
@@ -775,13 +900,25 @@
     let filteredSymbols = [];
     let currentChartType = "candles";
 
+    // Helper function to get current interval from radio buttons
+    function getCurrentInterval() {
+      const checkedRadio = document.querySelector('input[name="interval"]:checked');
+      return checkedRadio ? checkedRadio.value : 'HOUR_4';
+    }
+
+    // Helper function to get current chart type from tabs
+    function getCurrentChartType() {
+      const activeTab = document.querySelector('.chart-tab.active');
+      return activeTab ? activeTab.dataset.chartType : 'candles';
+    }
+
     function renderPreview(result) {
       const timestamps = result.timestamp;
       const ohlc = result.indicators.quote[0];
 
       // Filter data and prepare for custom drawing
       let filteredData = [];
-      const interval = document.getElementById('interval').value;
+      const interval = getCurrentInterval();
 
       for (let i = 0; i < timestamps.length; i++) {
         const date = new Date(timestamps[i] * 1000);
@@ -804,7 +941,7 @@
       }
 
       // Render based on chart type
-      const chartType = document.getElementById('chartType').value;
+      const chartType = getCurrentChartType();
       if (chartType === 'line') {
         drawLineChart(filteredData);
       } else {
@@ -1240,8 +1377,8 @@
     }
 
     function updateIntervalOptions(days) {
-      const intervalSelect = document.getElementById('interval');
-      const currentInterval = intervalSelect.value;
+      const intervalGroup = document.getElementById('intervalGroup');
+      const currentInterval = getCurrentInterval();
 
       // Capital.com API-validated interval mappings
       // Based on actual API data availability testing
@@ -1307,23 +1444,32 @@
       };
 
       const intervals = validIntervals[days] || validIntervals["30"];
-      intervalSelect.innerHTML = '';
 
-      intervals.forEach(interval => {
-        const option = document.createElement('option');
-        option.value = interval.value;
-        option.textContent = interval.label;
-        intervalSelect.appendChild(option);
+      // Hide all radio options first
+      const allOptions = intervalGroup.querySelectorAll('.interval-option');
+      allOptions.forEach(opt => opt.style.display = 'none');
+
+      // Show only valid intervals for this timeframe
+      const validValues = intervals.map(i => i.value);
+      validValues.forEach(value => {
+        const radio = intervalGroup.querySelector(`input[value="${value}"]`);
+        if (radio) {
+          radio.parentElement.style.display = 'flex';
+        }
       });
 
       // Smart default selection
-      if (intervals.some(i => i.value === currentInterval)) {
-        // Keep current selection if valid
-        intervalSelect.value = currentInterval;
-      } else {
+      let selectedInterval = currentInterval;
+      if (!intervals.some(i => i.value === currentInterval)) {
         // Use marked default or first option
         const defaultInterval = intervals.find(i => i.default) || intervals[0];
-        intervalSelect.value = defaultInterval.value;
+        selectedInterval = defaultInterval.value;
+      }
+
+      // Set the selected radio button
+      const radioToSelect = intervalGroup.querySelector(`input[value="${selectedInterval}"]`);
+      if (radioToSelect) {
+        radioToSelect.checked = true;
       }
     }
 
@@ -1332,7 +1478,7 @@
       let start;
 
       updateIntervalOptions(days);
-      const interval = document.getElementById('interval').value;
+      const interval = getCurrentInterval();
       const useCustomRange = document.getElementById('useCustomRange').checked;
 
       if (useCustomRange && days === 'custom') {
@@ -1506,10 +1652,10 @@
         const height = parseInt(document.getElementById('chartHeight').value);
         const bullColor = document.getElementById('bullColor').value;
         const bearColor = document.getElementById('bearColor').value;
-        const interval = document.getElementById('interval').value;
+        const interval = getCurrentInterval();
         const useCustomRange = document.getElementById('useCustomRange').checked;
         const strokeWeight = parseFloat(document.getElementById('strokeWeight').value) || 1;
-        const chartType = document.getElementById('chartType').value;
+        const chartType = getCurrentChartType();
 
         let timeframe;
         if (useCustomRange) {
@@ -1571,16 +1717,37 @@
       });
     });
 
-    // Add interval change listener
-    document.getElementById('interval').addEventListener('change', function() {
-      const useCustomRange = document.getElementById('useCustomRange').checked;
-      if (useCustomRange) {
-        fetchChart('custom', currentSymbol);
-      } else {
-        const activeBtn = document.querySelector('.timeframes button.active');
-        const days = activeBtn ? activeBtn.dataset.days : "30";
-        fetchChart(days, currentSymbol);
-      }
+    // Add chart tab click listeners
+    document.querySelectorAll('.chart-tab').forEach(tab => {
+      tab.addEventListener('click', function() {
+        // Update active state
+        document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+
+        // Re-render chart with new type
+        if (window.currentCanvasData) {
+          const chartType = this.dataset.chartType;
+          if (chartType === 'line') {
+            drawLineChart(window.currentCanvasData);
+          } else {
+            drawCandlestickChart(window.currentCanvasData);
+          }
+        }
+      });
+    });
+
+    // Add interval radio button change listeners
+    document.querySelectorAll('input[name="interval"]').forEach(radio => {
+      radio.addEventListener('change', function() {
+        const useCustomRange = document.getElementById('useCustomRange').checked;
+        if (useCustomRange) {
+          fetchChart('custom', currentSymbol);
+        } else {
+          const activeBtn = document.querySelector('.timeframes button.active');
+          const days = activeBtn ? activeBtn.dataset.days : "30";
+          fetchChart(days, currentSymbol);
+        }
+      });
     });
 
     // Custom date range toggle
@@ -1621,22 +1788,10 @@
       fetchChart('custom', currentSymbol);
     });
 
-    // Chart type change listener
-    document.getElementById('chartType').addEventListener('change', function() {
-      if (window.currentCanvasData) {
-        const chartType = document.getElementById('chartType').value;
-        if (chartType === 'line') {
-          drawLineChart(window.currentCanvasData);
-        } else {
-          drawCandlestickChart(window.currentCanvasData);
-        }
-      }
-    });
-
     // Color change listeners to update preview
     document.getElementById('bullColor').addEventListener('change', function() {
       if (window.currentCanvasData) {
-        const chartType = document.getElementById('chartType').value;
+        const chartType = getCurrentChartType();
         if (chartType === 'line') {
           drawLineChart(window.currentCanvasData);
         } else {
@@ -1647,7 +1802,7 @@
 
     document.getElementById('bearColor').addEventListener('change', function() {
       if (window.currentCanvasData) {
-        const chartType = document.getElementById('chartType').value;
+        const chartType = getCurrentChartType();
         if (chartType === 'line') {
           drawLineChart(window.currentCanvasData);
         } else {
@@ -1659,7 +1814,7 @@
     // Grid change listeners
     document.getElementById('showPriceGrid').addEventListener('change', function() {
       if (window.currentCanvasData) {
-        const chartType = document.getElementById('chartType').value;
+        const chartType = getCurrentChartType();
         if (chartType === 'line') {
           drawLineChart(window.currentCanvasData);
         } else {
@@ -1670,7 +1825,7 @@
 
     document.getElementById('showDateGrid').addEventListener('change', function() {
       if (window.currentCanvasData) {
-        const chartType = document.getElementById('chartType').value;
+        const chartType = getCurrentChartType();
         if (chartType === 'line') {
           drawLineChart(window.currentCanvasData);
         } else {
