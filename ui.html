@@ -81,8 +81,8 @@
 
     select:focus, input:focus {
       outline: none;
-      border-color: #C78D3A;
-      box-shadow: 0 0 0 3px rgba(199, 141, 58, 0.1);
+      border-color: #000000;
+      box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1);
     }
 
     .timeframes {
@@ -109,10 +109,10 @@
     }
 
     .timeframes button.active {
-      background: #C78D3A;
+      background: #000000;
       color: white;
-      border-color: #C78D3A;
-      box-shadow: 0 1px 3px rgba(199, 141, 58, 0.3);
+      border-color: #000000;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     }
 
     .checkbox-grid {
@@ -184,7 +184,7 @@
     }
 
     .generate-btn {
-      background: #C78D3A;
+      background: #000000;
       color: white;
       border: none;
       padding: 14px 20px; /* Bigger button */
@@ -192,15 +192,15 @@
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s ease;
-      text-transform: uppercase;
+      text-transform: none;
       letter-spacing: 0.5px;
       border-radius: 6px;
     }
 
     .generate-btn:hover {
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(199, 141, 58, 0.3);
-      background: #B8802F;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      background: #333333;
     }
 
     .generate-btn:active {
@@ -246,7 +246,7 @@
     }
 
     .symbol-option.selected {
-      background: #C78D3A;
+      background: #000000;
       color: white;
     }
 
@@ -273,11 +273,74 @@
     .custom-range-section {
       background: #fff8dc;
     }
+
+    /* Toggle Switch Styles */
+    .toggle-switch {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .toggle-switch label {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 500;
+      color: #4a5568;
+      cursor: pointer;
+      transition: color 0.2s ease;
+    }
+
+    .toggle-switch label.active {
+      color: #1a1a1a;
+      font-weight: 600;
+    }
+
+    .toggle-container {
+      position: relative;
+      width: 52px;
+      height: 28px;
+      background: #e2e8f0;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 24px;
+      height: 24px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .toggle-container.active {
+      background: #000000;
+    }
+
+    .toggle-container.active .toggle-slider {
+      transform: translateX(24px);
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="content">
+      <div class="section">
+        <h3 class="section-title">Chart Type</h3>
+        <div class="toggle-switch">
+          <label id="candlestickLabel" class="active">Candlestick</label>
+          <div class="toggle-container" id="chartTypeToggle">
+            <div class="toggle-slider"></div>
+          </div>
+          <label id="lineLabel">Line</label>
+        </div>
+      </div>
+
       <div class="section">
         <h3 class="section-title">Preview</h3>
         <div id="chart"></div>
@@ -296,13 +359,6 @@
 
       <div class="section">
         <h3 class="section-title">Data Selection</h3>
-        <div class="form-group">
-          <label for="chartType">Chart Type:</label>
-          <select id="chartType">
-            <option value="candles">Candlestick Chart</option>
-            <option value="line">Line Chart</option>
-          </select>
-        </div>
 
         <div class="form-group">
           <label for="interval">Interval:</label>
@@ -775,6 +831,33 @@
     let filteredSymbols = [];
     let currentChartType = "candles";
 
+    // Toggle switch functionality
+    function updateChartType(type) {
+      currentChartType = type;
+      const toggle = document.getElementById('chartTypeToggle');
+      const candlestickLabel = document.getElementById('candlestickLabel');
+      const lineLabel = document.getElementById('lineLabel');
+
+      if (type === 'line') {
+        toggle.classList.add('active');
+        candlestickLabel.classList.remove('active');
+        lineLabel.classList.add('active');
+      } else {
+        toggle.classList.remove('active');
+        candlestickLabel.classList.add('active');
+        lineLabel.classList.remove('active');
+      }
+
+      // Re-render chart if data exists
+      if (window.currentCanvasData) {
+        if (type === 'line') {
+          drawLineChart(window.currentCanvasData);
+        } else {
+          drawCandlestickChart(window.currentCanvasData);
+        }
+      }
+    }
+
     function renderPreview(result) {
       const timestamps = result.timestamp;
       const ohlc = result.indicators.quote[0];
@@ -804,8 +887,7 @@
       }
 
       // Render based on chart type
-      const chartType = document.getElementById('chartType').value;
-      if (chartType === 'line') {
+      if (currentChartType === 'line') {
         drawLineChart(filteredData);
       } else {
         drawCandlestickChart(filteredData);
@@ -1509,7 +1591,7 @@
         const interval = document.getElementById('interval').value;
         const useCustomRange = document.getElementById('useCustomRange').checked;
         const strokeWeight = parseFloat(document.getElementById('strokeWeight').value) || 1;
-        const chartType = document.getElementById('chartType').value;
+        const chartType = currentChartType;
 
         let timeframe;
         if (useCustomRange) {
@@ -1621,23 +1703,23 @@
       fetchChart('custom', currentSymbol);
     });
 
-    // Chart type change listener
-    document.getElementById('chartType').addEventListener('change', function() {
-      if (window.currentCanvasData) {
-        const chartType = document.getElementById('chartType').value;
-        if (chartType === 'line') {
-          drawLineChart(window.currentCanvasData);
-        } else {
-          drawCandlestickChart(window.currentCanvasData);
-        }
-      }
+    // Chart type toggle listeners
+    document.getElementById('chartTypeToggle').addEventListener('click', function() {
+      updateChartType(currentChartType === 'candles' ? 'line' : 'candles');
+    });
+
+    document.getElementById('candlestickLabel').addEventListener('click', function() {
+      updateChartType('candles');
+    });
+
+    document.getElementById('lineLabel').addEventListener('click', function() {
+      updateChartType('line');
     });
 
     // Color change listeners to update preview
     document.getElementById('bullColor').addEventListener('change', function() {
       if (window.currentCanvasData) {
-        const chartType = document.getElementById('chartType').value;
-        if (chartType === 'line') {
+        if (currentChartType === 'line') {
           drawLineChart(window.currentCanvasData);
         } else {
           drawCandlestickChart(window.currentCanvasData);
@@ -1647,8 +1729,7 @@
 
     document.getElementById('bearColor').addEventListener('change', function() {
       if (window.currentCanvasData) {
-        const chartType = document.getElementById('chartType').value;
-        if (chartType === 'line') {
+        if (currentChartType === 'line') {
           drawLineChart(window.currentCanvasData);
         } else {
           drawCandlestickChart(window.currentCanvasData);
@@ -1659,8 +1740,7 @@
     // Grid change listeners
     document.getElementById('showPriceGrid').addEventListener('change', function() {
       if (window.currentCanvasData) {
-        const chartType = document.getElementById('chartType').value;
-        if (chartType === 'line') {
+        if (currentChartType === 'line') {
           drawLineChart(window.currentCanvasData);
         } else {
           drawCandlestickChart(window.currentCanvasData);
@@ -1670,8 +1750,7 @@
 
     document.getElementById('showDateGrid').addEventListener('change', function() {
       if (window.currentCanvasData) {
-        const chartType = document.getElementById('chartType').value;
-        if (chartType === 'line') {
+        if (currentChartType === 'line') {
           drawLineChart(window.currentCanvasData);
         } else {
           drawCandlestickChart(window.currentCanvasData);
