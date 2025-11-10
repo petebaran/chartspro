@@ -83,13 +83,75 @@ function buildPricesUrl(env, epic, resolution, from, to) {
   const url = new URL(`${env.CAPITAL_API_BASE}/api/v1/prices/${encodeURIComponent(epic)}`);
   url.searchParams.append('resolution', resolution);
 
-  if (from) {
-    const cleanFrom = from.replace(/\.\d{3}Z$/, '');
-    url.searchParams.append('from', cleanFrom);
+  // Clamp invalid/too-wide ranges for intraday intervals to last 1000 bars
+  const barSeconds = getBarSeconds(resolution);
+  const isIntraday = barSeconds > 0 && barSeconds < 86400; // under 1 day
+  let fromAdj = from;
+  let toAdj = to;
+
+  try {
+    const now = new Date();
+    let toDate = toAdj ? new Date(toAdj) : now;
+    if (isNaN(toDate.getTime())) toDate = now;
+    if (toDate > now) toDate = now; // avoid future "to"
+
+    if (fromAdj) {
+      let fromDate = new Date(fromAdj);
+      if (!isNaN(fromDate.getTime())) {
+        if (fromDate > toDate) {
+          // Swap or back off to max window
+          fromDate = new Date(toDate.getTime() - (1000 * barSeconds * 1000));
+        }
+        if (isIntraday) {
+          const maxWindowMs = 1000 * barSeconds * 1000; // 1000 bars
+          const spanMs = toDate.getTime() - fromDate.getTime();
+          if (spanMs > maxWindowMs) {
+            fromDate = new Date(toDate.getTime() - maxWindowMs);
+          }
+          // Align to bar boundaries to avoid invalid.from/to
+          fromDate = alignToBar(fromDate, barSeconds);
+          toDate = alignToBar(toDate, barSeconds);
+        } else {
+          // For DAY/WEEK align to 00:00 UTC to be safe
+          if (barSeconds >= 86400) {
+            fromDate = new Date(Date.UTC(fromDate.getUTCFullYear(), fromDate.getUTCMonth(), fromDate.getUTCDate()));
+            toDate = new Date(Date.UTC(toDate.getUTCFullYear(), toDate.getUTCMonth(), toDate.getUTCDate()));
+          }
+        }
+        // Ensure from < to by at least one bar
+        if (fromDate.getTime() >= toDate.getTime()) {
+          fromDate = new Date(toDate.getTime() - (barSeconds || 86400) * 1000);
+        }
+        fromAdj = formatCapitalDate(fromDate);
+        toAdj = formatCapitalDate(toDate);
+      } else {
+        // Invalid from, drop it to let API infer window
+        fromAdj = undefined;
+      }
+    } else if (!fromAdj && isIntraday && toAdj) {
+      // If only "to" provided for intraday, set from to last 1000 bars
+      const toDateOnly = new Date(toAdj);
+      if (!isNaN(toDateOnly.getTime())) {
+        let fromDateOnly = new Date(toDateOnly.getTime() - (1000 * barSeconds * 1000));
+        // Align both to bar boundaries
+        fromDateOnly = alignToBar(fromDateOnly, barSeconds);
+        const toAligned = alignToBar(toDateOnly, barSeconds);
+        if (fromDateOnly.getTime() >= toAligned.getTime()) {
+          fromDateOnly = new Date(toAligned.getTime() - barSeconds * 1000);
+        }
+        fromAdj = formatCapitalDate(fromDateOnly);
+        toAdj = formatCapitalDate(toAligned);
+      }
+    }
+  } catch (e) {
+    // Non-fatal: fall back to original values
   }
-  if (to) {
-    const cleanTo = to.replace(/\.\d{3}Z$/, '');
-    url.searchParams.append('to', cleanTo);
+
+  if (fromAdj) {
+    url.searchParams.append('from', fromAdj);
+  }
+  if (toAdj) {
+    url.searchParams.append('to', toAdj);
   }
 
   url.searchParams.append('max', '1000');
@@ -134,11 +196,49 @@ function shouldAttemptFallback(status, errorText) {
       'no data available',
       'validation.max',
       'validation.min',
-      'not available for the requested resolution'
+      'not available for the requested resolution',
+      'invalid.daterange',
+      'invalid date range',
+      'error.invalid.daterange',
+      'error.invalid.from',
+      'error.invalid.to'
     ];
     return triggerPhrases.some(phrase => lower.includes(phrase));
   }
   return false;
+}
+
+function getBarSeconds(resolution) {
+  switch (resolution) {
+    case 'MINUTE': return 60;
+    case 'MINUTE_5': return 5 * 60;
+    case 'MINUTE_15': return 15 * 60;
+    case 'MINUTE_30': return 30 * 60;
+    case 'HOUR': return 60 * 60;
+    case 'HOUR_4': return 4 * 60 * 60;
+    case 'DAY': return 24 * 60 * 60;
+    case 'WEEK': return 7 * 24 * 60 * 60;
+    default: return 0;
+  }
+}
+
+function alignToBar(dateObj, barSeconds) {
+  if (!(dateObj instanceof Date) || isNaN(dateObj.getTime()) || !barSeconds) return dateObj;
+  const ms = barSeconds * 1000;
+  const floored = Math.floor(dateObj.getTime() / ms) * ms;
+  return new Date(floored);
+}
+
+function formatCapitalDate(dateObj) {
+  // Capital.com expects 'YYYY-MM-DDTHH:mm:ss' (UTC) without trailing 'Z'
+  const pad = (n) => String(n).padStart(2, '0');
+  const yyyy = dateObj.getUTCFullYear();
+  const mm = pad(dateObj.getUTCMonth() + 1);
+  const dd = pad(dateObj.getUTCDate());
+  const hh = pad(dateObj.getUTCHours());
+  const mi = pad(dateObj.getUTCMinutes());
+  const ss = pad(dateObj.getUTCSeconds());
+  return `${yyyy}-${mm}-${dd}T${hh}:${mi}:${ss}`;
 }
 
 async function executePriceRequest(env, epic, resolution, from, to, session) {
